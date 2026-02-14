@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Model Architect — Build Your Tactical Framework</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060a08;--surface:#0d1310;--surface2:#111916;--border:#1a2620;--green:#34d399;--green-dim:#1a7a52;--green-dark:#0f4d33;--text:#e8f0ec;--text2:#8fa89b;--text3:#4a6358;--att:#f59e0b;--def:#ef4444;--tra:#3b82f6;--trd:#a855f7;--sp:#ec4899}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+
+/* ═══ NAV ═══ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,10,8,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(52,211,153,0.06)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:flex;align-items:center;justify-content:center;padding:4px}
+.nav-logo-icon svg{width:22px;height:22px;color:var(--bg)}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px}
+.nav-brand span{color:var(--green)}
+.nav-links{display:flex;align-items:center;gap:24px}
+.nav-links a{color:var(--text2);font-size:13px;font-weight:500;transition:color 0.2s}
+.nav-links a:hover{color:var(--text)}
+.nav-btn{background:var(--green-dim);color:var(--text);border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.nav-btn:hover{background:#1f8f5e}
+.nav-btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:7px 16px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.nav-btn-outline:hover{border-color:var(--green-dim);color:var(--text)}
+.nav-user{display:flex;align-items:center;gap:10px}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--green),var(--green-dim));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--bg);text-transform:uppercase}
+.nav-user-name{font-size:13px;font-weight:600;color:var(--text)}
+.nav-user-level{font-size:10px;color:var(--text3);display:block}
+.nav-logout{background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px;transition:all 0.2s}
+.nav-logout:hover{color:var(--def);background:rgba(239,68,68,0.1)}
+
+/* ═══ HERO ═══ */
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:120px 24px 80px}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 30%,rgba(52,211,153,0.06),transparent 70%)}
+.hero::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(52,211,153,0.012) 80px,rgba(52,211,153,0.012) 81px)}
+.hero-inner{position:relative;z-index:1;max-width:900px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:600;color:var(--green);margin-bottom:28px;letter-spacing:0.5px}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,8vw,88px);letter-spacing:4px;line-height:0.95;margin-bottom:24px}
+.hero h1 .accent{color:var(--green);position:relative}
+.hero h1 .accent::after{content:'';position:absolute;bottom:-4px;left:0;right:0;height:3px;background:var(--green);border-radius:2px;opacity:0.4}
+.hero-sub{color:var(--text2);font-size:clamp(16px,2vw,20px);line-height:1.6;max-width:640px;margin:0 auto 40px}
+.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.hero-cta{padding:14px 32px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.25s;border:none;display:inline-flex;align-items:center;gap:8px}
+.hero-cta.primary{background:linear-gradient(135deg,var(--green),var(--green-dim));color:var(--bg);box-shadow:0 8px 32px rgba(52,211,153,0.25)}
+.hero-cta.primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(52,211,153,0.35)}
+.hero-cta.secondary{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+.hero-cta.secondary:hover{border-color:var(--green-dim);background:rgba(52,211,153,0.05)}
+.hero-stats{display:flex;gap:40px;justify-content:center;flex-wrap:wrap}
+.hero-stat{text-align:center}
+.hero-stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--green);line-height:1}
+.hero-stat-label{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+
+/* ═══ FEATURES ═══ */
+.section{padding:100px 24px}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-label{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;text-align:center}
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,5vw,52px);letter-spacing:2px;text-align:center;margin-bottom:16px;line-height:1}
+.section-sub{color:var(--text2);font-size:16px;text-align:center;max-width:580px;margin:0 auto 60px;line-height:1.6}
+.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.feature{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:32px 28px;transition:all 0.3s}
+.feature:hover{border-color:var(--green-dim);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.feature-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;font-size:24px}
+.feature-icon.search{background:rgba(52,211,153,0.1);color:var(--green)}
+.feature-icon.build{background:rgba(59,130,246,0.1);color:var(--tra)}
+.feature-icon.create{background:rgba(245,158,11,0.1);color:var(--att)}
+.feature-icon.export{background:rgba(168,85,247,0.1);color:var(--trd)}
+.feature-icon.phases{background:rgba(236,72,153,0.1);color:var(--sp)}
+.feature-icon.team{background:rgba(239,68,68,0.1);color:var(--def)}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.feature p{font-size:14px;color:var(--text2);line-height:1.6}
+
+/* ═══ PRICING ═══ */
+.pricing-section{background:var(--surface)}
+.pricing-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:900px;margin:0 auto}
+.price-card{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:36px 32px;position:relative;transition:all 0.3s}
+.price-card.featured{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 20px 60px rgba(52,211,153,0.1)}
+.price-card.featured::before{content:'MOST POPULAR';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--green);color:var(--bg);font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 14px;border-radius:100px}
+.price-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px;color:var(--text2);margin-bottom:8px}
+.price-amount{font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--text);line-height:1;margin-bottom:4px}
+.price-amount span{font-size:18px;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400}
+.price-period{font-size:13px;color:var(--text3);margin-bottom:24px}
+.price-features{list-style:none;margin-bottom:28px}
+.price-features li{padding:8px 0;font-size:14px;color:var(--text2);border-bottom:1px solid rgba(255,255,255,0.03);display:flex;align-items:center;gap:8px}
+.price-features li::before{content:'';width:16px;height:16px;border-radius:50%;background:rgba(52,211,153,0.1);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.price-features li.yes::before{background:rgba(52,211,153,0.15);box-shadow:inset 0 0 0 2px var(--green)}
+.price-features li.no{color:var(--text3)}
+.price-features li.no::before{background:rgba(255,255,255,0.03);box-shadow:inset 0 0 0 1.5px var(--text3)}
+.price-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all 0.2s}
+.price-btn.primary{background:linear-gradient(135deg,var(--green),var(--green-dim));color:var(--bg)}
+.price-btn.primary:hover{box-shadow:0 8px 24px rgba(52,211,153,0.3);transform:translateY(-1px)}
+.price-btn.outline{background:transparent;border:1.5px solid var(--border);color:var(--text2)}
+.price-btn.outline:hover{border-color:var(--green-dim);color:var(--text)}
+
+/* ═══ MODAL ═══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:440px;width:100%;position:relative;animation:modalIn 0.3s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px}
+.modal-close:hover{color:var(--text)}
+.modal-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:flex;align-items:center;justify-content:center;margin:0 auto 20px;padding:6px}
+.modal-logo svg{width:30px;height:30px;color:var(--bg)}
+.modal h2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;text-align:center;margin-bottom:6px}
+.modal .modal-sub{color:var(--text2);font-size:13px;text-align:center;margin-bottom:28px}
+.modal label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:5px}
+.modal input,.modal select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;color:var(--text);font-family:inherit;font-size:14px;outline:none;margin-bottom:14px;transition:border-color 0.2s}
+.modal input:focus{border-color:var(--green-dim)}
+.modal input::placeholder{color:var(--text3)}
+.modal-btn{width:100%;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:none;background:linear-gradient(135deg,var(--green),var(--green-dim));color:var(--bg);margin-top:4px;transition:all 0.2s}
+.modal-btn:hover{box-shadow:0 8px 24px rgba(52,211,153,0.3);transform:translateY(-1px)}
+.modal-btn:disabled{opacity:0.5;cursor:default;transform:none;box-shadow:none}
+.modal-footer{text-align:center;margin-top:16px;font-size:12px;color:var(--text3)}
+.modal-footer a{color:var(--green);font-weight:600}
+.modal-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:12px}
+.modal-divider::before,.modal-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.modal-social{display:flex;gap:10px;margin-bottom:20px}
+.modal-social button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+.modal-social button:hover{border-color:var(--text3)}
+/* Success state */
+.success-check{width:64px;height:64px;border-radius:50%;background:rgba(52,211,153,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.success-check svg{color:var(--green)}
+
+/* ═══ FOOTER ═══ */
+footer{padding:40px 24px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:13px}
+footer a{color:var(--text2)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+  .nav-links a{display:none}
+  .hero h1{letter-spacing:2px}
+  .hero-stats{gap:24px}
+  .features{grid-template-columns:1fr}
+  .pricing-cards{grid-template-columns:1fr;max-width:400px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon"><svg viewBox="0 0 64 64" fill="none"><path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="32" cy="14" r="2.5" fill="currentColor"/><circle cx="18" cy="24" r="2.5" fill="currentColor"/><circle cx="46" cy="24" r="2.5" fill="currentColor"/><circle cx="22" cy="40" r="2.5" fill="currentColor"/><circle cx="42" cy="40" r="2.5" fill="currentColor"/><circle cx="32" cy="50" r="2.5" fill="currentColor"/><line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg></div>
+    <span class="nav-brand">GAME MODEL <span>ARCHITECT</span></span>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#features">Features</a>
+    <a href="#pricing">Pricing</a>
+    <button class="nav-btn-outline" onclick="openModal('login')">Log In</button>
+    <button class="nav-btn" onclick="openModal('signup')">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="hero-badge-dot"></span> Built by coaches, for coaches</div>
+    <h1>BUILD YOUR<br><span class="accent">GAME MODEL</span></h1>
+    <p class="hero-sub">The tactical framework builder for soccer coaches. Search 100+ game principles, create your own, and export a complete game model for your team.</p>
+    <div class="hero-ctas" id="heroCtas">
+      <button class="hero-cta primary" onclick="openModal('signup')">Start Building — Free <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+      <button class="hero-cta secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See Features</button>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">100+</div><div class="hero-stat-label">Game Principles</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">5</div><div class="hero-stat-label">Phases of Play</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">40+</div><div class="hero-stat-label">Trackable Metrics</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">&infin;</div><div class="hero-stat-label">Custom Principles</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-label">Features</div>
+    <div class="section-title">EVERYTHING YOU NEED TO<br><span style="color:var(--green)">DEFINE YOUR PLAYING STYLE</span></div>
+    <p class="section-sub">From pressing triggers to positional play — every principle organized, searchable, and ready to build into your unique game model.</p>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon search">🔍</div>
+        <h3>Smart Search</h3>
+        <p>Instantly search across 100+ principles by name, tags, metrics, or description. Relevance-ranked results with highlighted matches.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon build">🧱</div>
+        <h3>Game Model Builder</h3>
+        <p>Add principles to your model, organize by phase, reorder by priority. Your tactical DNA in one place.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon create">✨</div>
+        <h3>Create Custom Principles</h3>
+        <p>Add your own principles with descriptions and tags. Every team is unique — your game model should be too.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon export">📸</div>
+        <h3>Image & Text Export</h3>
+        <p>Export your game model as a presentation-ready PNG image or a structured text file. Share with staff and players.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon phases">⚡</div>
+        <h3>All 5 Phases of Play</h3>
+        <p>Attacking, Defending, Transition to Attack, Transition to Defense, and Set Pieces — complete tactical coverage.</p>
+      </div>
+      <div class="feature" style="border-color:rgba(59,130,246,0.25);background:linear-gradient(135deg,rgba(59,130,246,0.04),var(--surface2))">
+        <div class="feature-icon" style="background:rgba(59,130,246,0.12);color:#60a5fa">📊</div>
+        <h3 style="color:#60a5fa">Trackable Metrics</h3>
+        <p>40+ principles come with real, measurable KPIs — Progressive Passes, PPDA, xG Conceded, Counter-Press Success Rate, and more. Know exactly what to measure on match day.</p>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <span style="padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)">PPDA</span>
+          <span style="padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)">Progressive Passes</span>
+          <span style="padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)">xG Conceded</span>
+          <span style="padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)">Possession %</span>
+          <span style="padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)">1v1 Win %</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS SHOWCASE -->
+<section class="section" id="metrics" style="padding-top:60px;padding-bottom:60px">
+  <div class="section-inner">
+    <div class="section-label" style="color:#60a5fa">Pro Coach Feature</div>
+    <div class="section-title">KNOW WHAT TO <span style="color:#60a5fa">MEASURE</span></div>
+    <p class="section-sub">Every principle is linked to the metrics that actually tell you if it's working. No guesswork — just data you can track from the sideline or on video.</p>
+    <div style="max-width:700px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:40px">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Attacking</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;color:var(--text)">Progressive Passes</span>
+          <span style="font-size:13px;color:var(--text)">Final Third Entries</span>
+          <span style="font-size:13px;color:var(--text)">Possession %</span>
+          <span style="font-size:13px;color:var(--text)">Cross Completion %</span>
+          <span style="font-size:13px;color:var(--text)">1v1 Take-On %</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:700;color:#ef4444;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Defending</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;color:var(--text)">PPDA</span>
+          <span style="font-size:13px;color:var(--text)">Opp. xG Conceded</span>
+          <span style="font-size:13px;color:var(--text)">Shots Blocked</span>
+          <span style="font-size:13px;color:var(--text)">Aerial Duel Win %</span>
+          <span style="font-size:13px;color:var(--text)">Interceptions</span>
+        </div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:20px">
+        <div style="font-size:11px;font-weight:700;color:#3b82f6;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Transitions</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span style="font-size:13px;color:var(--text)">Counter-Press Success %</span>
+          <span style="font-size:13px;color:var(--text)">Ball Recoveries in 5s</span>
+          <span style="font-size:13px;color:var(--text)">Goals from Counters</span>
+          <span style="font-size:13px;color:var(--text)">Progressive Carries</span>
+          <span style="font-size:13px;color:var(--text)">Recovery Runs</span>
+        </div>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:24px;color:var(--text3);font-size:13px">40+ metrics mapped across Attacking, Defending, Transitions & Set Pieces — included with every Pro Coach plan</p>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section pricing-section" id="pricing">
+  <div class="section-inner">
+    <div class="section-label">Pricing</div>
+    <div class="section-title">CHOOSE YOUR <span style="color:var(--green)">PLAN</span></div>
+    <p class="section-sub">Start free and upgrade when you're ready. No credit card required to get started.</p>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <div class="price-name">STARTER</div>
+        <div class="price-amount">$0 <span>/forever</span></div>
+        <div class="price-period">Perfect for trying it out</div>
+        <ul class="price-features">
+          <li class="yes">Browse 100+ principles</li>
+          <li class="yes">Search & filter library</li>
+          <li class="yes">Build 1 game model</li>
+          <li class="yes">Text export (.txt)</li>
+          <li class="no">Trackable metrics per principle</li>
+          <li class="no">Custom principles</li>
+          <li class="no">Image export (PNG)</li>
+          <li class="no">Multiple game models</li>
+        </ul>
+        <button class="price-btn outline" onclick="openModal('signup')">Get Started Free</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-name">PRO COACH</div>
+        <div class="price-amount">$9 <span>/month</span></div>
+        <div class="price-period">Everything you need to win</div>
+        <ul class="price-features">
+          <li class="yes">Browse 100+ principles</li>
+          <li class="yes">Search & filter library</li>
+          <li class="yes">Unlimited game models</li>
+          <li class="yes">Text & image export</li>
+          <li class="yes" style="color:#60a5fa;font-weight:600">40+ trackable KPIs & metrics</li>
+          <li class="yes">Create custom principles</li>
+          <li class="yes">Presentation-ready PNG</li>
+          <li class="yes">Priority support</li>
+        </ul>
+        <button class="price-btn primary" onclick="openModal('signup')">Start Pro — 14 Day Trial</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>&copy; 2026 Game Model Architect &middot; <a href="#">Terms</a> &middot; <a href="#">Privacy</a> &middot; <a href="#">Contact</a></p>
+</footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const APP_URL = 'app.html'; // The game model builder page
+
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('gma_user')); } catch(e) { return null; }
+}
+function saveUser(u) { localStorage.setItem('gma_user', JSON.stringify(u)); }
+function clearUser() { localStorage.removeItem('gma_user'); }
+
+function updateNav() {
+  const user = getUser();
+  const nav = document.getElementById('navLinks');
+  if (user) {
+    const initials = user.name.split(' ').map(w=>w[0]).join('').substring(0,2);
+    nav.innerHTML = `
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="blog.html">Blog</a>
+      <div class="nav-user">
+        <div class="nav-avatar">${initials}</div>
+        <div>
+          <span class="nav-user-name">${esc(user.name)}</span>
+          <span class="nav-user-level">${esc(user.level)}</span>
+        </div>
+      </div>
+      <button class="nav-btn" onclick="goToApp()">Open App →</button>
+      <button class="nav-logout" onclick="logout()">Log out</button>
+    `;
+  } else {
+    nav.innerHTML = `
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="blog.html">Blog</a>
+      <button class="nav-btn-outline" onclick="openModal('login')">Log In</button>
+      <button class="nav-btn" onclick="openModal('signup')">Get Started</button>
+    `;
+  }
+  updateHeroCTA();
+}
+
+function updateHeroCTA() {
+  const user = getUser();
+  const ctaContainer = document.getElementById('heroCtas');
+  if (!ctaContainer) return;
+  if (user) {
+    ctaContainer.innerHTML = `
+      <button class="hero-cta primary" onclick="goToApp()">Open Game Model Builder <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+      <button class="hero-cta secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See Features</button>
+    `;
+  } else {
+    ctaContainer.innerHTML = `
+      <button class="hero-cta primary" onclick="openModal('signup')">Start Building — Free <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+      <button class="hero-cta secondary" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See Features</button>
+    `;
+  }
+}
+
+function goToApp() { window.location.href = APP_URL; }
+function logout() { clearUser(); updateNav(); }
+function esc(s) { return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function openModal(type) {
+  const m = document.getElementById('modalContent');
+  const o = document.getElementById('modalOverlay');
+  if (type === 'signup') {
+    m.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="modal-logo"><svg viewBox="0 0 64 64" fill="none"><path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="32" cy="14" r="2.5" fill="currentColor"/><circle cx="18" cy="24" r="2.5" fill="currentColor"/><circle cx="46" cy="24" r="2.5" fill="currentColor"/><circle cx="22" cy="40" r="2.5" fill="currentColor"/><circle cx="42" cy="40" r="2.5" fill="currentColor"/><circle cx="32" cy="50" r="2.5" fill="currentColor"/><line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg></div>
+      <h2>CREATE YOUR PROFILE</h2>
+      <p class="modal-sub">Start building your game model in under 60 seconds</p>
+      <div class="modal-social">
+        <button onclick="socialSignup('Google')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Google</button>
+        <button onclick="socialSignup('GitHub')"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</button>
+      </div>
+      <div class="modal-divider">or sign up with email</div>
+      <div id="signupError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#ef4444"></div>
+      <label>Full Name *</label>
+      <input type="text" placeholder="Coach name" id="signupName">
+      <label>Email *</label>
+      <input type="email" placeholder="you@club.com" id="signupEmail">
+      <label>Password *</label>
+      <input type="password" placeholder="Min 8 characters" id="signupPass">
+      <label>Coaching Level</label>
+      <select id="signupLevel">
+        <option>Youth / Grassroots</option>
+        <option>High School / College</option>
+        <option>Semi-Pro / Amateur</option>
+        <option>Professional</option>
+        <option>Academy / Development</option>
+      </select>
+      <button class="modal-btn" onclick="doSignup()">Create Profile & Start Building</button>
+      <div class="modal-footer">Already have an account? <a href="#" onclick="event.preventDefault();openModal('login')">Log in</a></div>
+    `;
+  } else if (type === 'login') {
+    m.innerHTML = `
+      <button class="modal-close" onclick="closeModal()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <div class="modal-logo"><svg viewBox="0 0 64 64" fill="none"><path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="32" cy="14" r="2.5" fill="currentColor"/><circle cx="18" cy="24" r="2.5" fill="currentColor"/><circle cx="46" cy="24" r="2.5" fill="currentColor"/><circle cx="22" cy="40" r="2.5" fill="currentColor"/><circle cx="42" cy="40" r="2.5" fill="currentColor"/><circle cx="32" cy="50" r="2.5" fill="currentColor"/><line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg></div>
+      <h2>WELCOME BACK</h2>
+      <p class="modal-sub">Log in to access your game models</p>
+      <div class="modal-social">
+        <button onclick="socialLogin()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Google</button>
+        <button onclick="socialLogin()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub</button>
+      </div>
+      <div class="modal-divider">or continue with email</div>
+      <div id="loginError" style="display:none;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:#ef4444"></div>
+      <label>Email</label>
+      <input type="email" placeholder="you@club.com" id="loginEmail">
+      <label>Password</label>
+      <input type="password" placeholder="Your password" id="loginPass">
+      <button class="modal-btn" onclick="doLogin()">Log In</button>
+      <div class="modal-footer">Don't have an account? <a href="#" onclick="event.preventDefault();openModal('signup')">Sign up free</a></div>
+    `;
+  }
+  o.classList.add('show');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPass').value;
+  const level = document.getElementById('signupLevel').value;
+  const err = document.getElementById('signupError');
+  if (!name) { err.textContent='Please enter your name.'; err.style.display='block'; return; }
+  if (!email || !email.includes('@')) { err.textContent='Please enter a valid email.'; err.style.display='block'; return; }
+  if (pass.length < 8) { err.textContent='Password must be at least 8 characters.'; err.style.display='block'; return; }
+  err.style.display='none';
+  saveUser({ name, email, level, createdAt: new Date().toISOString() });
+  showSuccess();
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  const user = getUser();
+  if (!email || !pass) { err.textContent='Please fill in all fields.'; err.style.display='block'; return; }
+  if (user && user.email === email) {
+    err.style.display='none';
+    closeModal(); updateNav();
+  } else if (user) {
+    err.textContent='Email not recognized. Try signing up.'; err.style.display='block';
+  } else {
+    err.textContent='No account found. Please sign up first.'; err.style.display='block';
+  }
+}
+
+function socialSignup(provider) {
+  saveUser({ name: provider + ' User', email: provider.toLowerCase() + '@example.com', level: 'Not specified', createdAt: new Date().toISOString() });
+  showSuccess();
+}
+
+function socialLogin() {
+  const user = getUser();
+  if (user) { closeModal(); updateNav(); }
+  else { openModal('signup'); }
+}
+
+function showSuccess() {
+  const user = getUser();
+  const m = document.getElementById('modalContent');
+  m.innerHTML = `
+    <button class="modal-close" onclick="closeModal();updateNav()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="success-check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2>WELCOME, ${esc(user.name.split(' ')[0]).toUpperCase()}!</h2>
+    <p class="modal-sub">Your profile has been created. You're ready to build your tactical framework.</p>
+    <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin:16px 0;text-align:left">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+        <div class="nav-avatar" style="width:40px;height:40px;font-size:15px">${user.name.split(' ').map(w=>w[0]).join('').substring(0,2)}</div>
+        <div>
+          <div style="font-weight:700;font-size:14px">${esc(user.name)}</div>
+          <div style="font-size:12px;color:var(--text3)">${esc(user.email)}</div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">Level: ${esc(user.level)}</div>
+    </div>
+    <button class="modal-btn" onclick="closeModal();updateNav();window.location.href='welcome.html'" style="margin-top:4px">Start Building My Game Model →</button>
+    <div class="modal-footer" style="margin-top:12px">Or <a href="#" onclick="event.preventDefault();closeModal();updateNav()">browse the landing page first</a></div>
+  `;
+}
+
+// Init nav state on page load
+updateNav();
+
+// Smooth scroll
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const el = document.querySelector(a.getAttribute('href'));
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>

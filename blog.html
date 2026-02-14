@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coaching Blog — Game Model Architect</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060a08;--surface:#0d1310;--surface2:#111916;--border:#1a2620;--green:#34d399;--green-dim:#1a7a52;--text:#e8f0ec;--text2:#8fa89b;--text3:#4a6358;--att:#f59e0b;--def:#ef4444;--tra:#3b82f6;--trd:#a855f7;--sp:#ec4899}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,10,8,0.92);backdrop-filter:blur(20px);border-bottom:1px solid rgba(52,211,153,0.06)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:flex;align-items:center;justify-content:center;padding:4px}
+.nav-logo-icon svg{width:22px;height:22px;color:var(--bg)}
+.nav-brand{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)}
+.nav-brand span{color:var(--green)}
+.nav-links{display:flex;align-items:center;gap:20px}
+.nav-links a{color:var(--text2);font-size:13px;font-weight:500;transition:color 0.2s}
+.nav-links a:hover{color:var(--text)}
+.nav-links a.active{color:var(--green)}
+.nav-btn{background:var(--green-dim);color:var(--text);border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.nav-btn:hover{background:#1f8f5e}
+.page{max-width:920px;margin:0 auto;padding:100px 24px 80px}
+.page-header{text-align:center;margin-bottom:48px;padding-top:20px}
+.page-label{font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,6vw,56px);letter-spacing:3px;line-height:1;margin-bottom:14px}
+.page-title span{color:var(--green)}
+.page-sub{color:var(--text2);font-size:16px;line-height:1.6;max-width:600px;margin:0 auto}
+.blog-filters{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:40px}
+.bf{padding:7px 16px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:0.3px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all 0.2s;user-select:none}
+.bf:hover{background:rgba(52,211,153,0.05);border-color:var(--green-dim)}
+.bf.active{border-color:var(--green);color:var(--green);background:rgba(52,211,153,0.08)}
+.articles{display:grid;gap:16px}
+.article-card{background:var(--surface2);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:all 0.3s}
+.article-card:hover{border-color:var(--green-dim);transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,0.3)}
+.article-inner{padding:28px 28px 24px}
+.article-meta{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.article-cat{padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.article-cat.fundamentals{color:var(--green);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2)}
+.article-cat.attacking{color:var(--att);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2)}
+.article-cat.defending{color:var(--def);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)}
+.article-cat.transitions{color:var(--tra);background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2)}
+.article-cat.setpieces{color:var(--sp);background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.2)}
+.article-cat.philosophy{color:var(--trd);background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.2)}
+.article-read{font-size:11px;color:var(--text3);margin-left:auto}
+.article-card h2{font-size:20px;font-weight:700;line-height:1.3;margin-bottom:8px;color:var(--text)}
+.article-card .excerpt{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:14px}
+.article-tags{display:flex;gap:6px;flex-wrap:wrap}
+.article-tag{padding:3px 8px;border-radius:5px;font-size:10px;font-weight:500;color:var(--green);background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15)}
+.article-link{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--green);margin-top:4px;transition:gap 0.2s}
+.article-card:hover .article-link{gap:8px}
+.article-full{display:none;padding:0 28px 28px}
+.article-card.open .article-full{display:block}
+.article-card.open{cursor:default}
+.article-card.open:hover{transform:none}
+.article-body{font-size:15px;line-height:1.8;color:var(--text2)}
+.article-body h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--text);margin:28px 0 12px}
+.article-body p{margin-bottom:16px}
+.article-body strong{color:var(--text);font-weight:600}
+.article-body ul{margin:0 0 16px 20px}
+.article-body li{margin-bottom:8px;line-height:1.6}
+.article-body .callout{background:rgba(52,211,153,0.06);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:14px;color:var(--text2)}
+.article-body .callout strong{color:var(--green)}
+.article-body .pr{display:inline-flex;align-items:center;gap:4px;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;color:var(--green);white-space:nowrap}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;margin-top:20px;transition:all 0.2s}
+.back-btn:hover{border-color:var(--green-dim);color:var(--text)}
+.blog-cta{background:linear-gradient(135deg,rgba(52,211,153,0.08),rgba(52,211,153,0.02));border:1px solid rgba(52,211,153,0.2);border-radius:16px;padding:36px 32px;text-align:center;margin-top:48px}
+.blog-cta h3{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:8px}
+.blog-cta p{color:var(--text2);font-size:14px;margin-bottom:20px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6}
+.blog-cta-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;border:none;background:linear-gradient(135deg,var(--green),var(--green-dim));color:var(--bg);transition:all 0.2s}
+.blog-cta-btn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(52,211,153,0.3)}
+footer{padding:40px 24px;border-top:1px solid var(--border);text-align:center;color:var(--text3);font-size:13px;margin-top:60px}
+footer a{color:var(--text2)}
+@media(max-width:600px){.article-inner{padding:20px 18px 16px}.article-full{padding:0 18px 18px}.page{padding:90px 16px 60px}.nav-links a:not(.active){display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html">
+    <div class="nav-logo-icon"><svg viewBox="0 0 64 64" fill="none"><path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="32" cy="14" r="2.5" fill="currentColor"/><circle cx="18" cy="24" r="2.5" fill="currentColor"/><circle cx="46" cy="24" r="2.5" fill="currentColor"/><circle cx="22" cy="40" r="2.5" fill="currentColor"/><circle cx="42" cy="40" r="2.5" fill="currentColor"/><circle cx="32" cy="50" r="2.5" fill="currentColor"/><line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg></div>
+    <span class="nav-brand">GAME MODEL <span>ARCHITECT</span></span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#features">Features</a>
+    <a href="blog.html" class="active">Blog</a>
+    <a href="app.html"><button class="nav-btn">Open App</button></a>
+  </div>
+</nav>
+<div class="page">
+  <div class="page-header">
+    <div class="page-label">Coaching Insights</div>
+    <div class="page-title">THE GAME MODEL <span>PLAYBOOK</span></div>
+    <p class="page-sub">Practical guides to help you choose the right principles for your team, level, and playing philosophy.</p>
+  </div>
+  <div class="blog-filters" id="blogFilters"></div>
+  <div class="articles" id="articleList"></div>
+  <div class="blog-cta">
+    <h3>READY TO BUILD <span style="color:var(--green)">YOUR MODEL?</span></h3>
+    <p>Take what you've learned and put it into practice. Start selecting principles and building your tactical framework.</p>
+    <a href="app.html"><button class="blog-cta-btn">Open Game Model Builder →</button></a>
+  </div>
+</div>
+<footer><p>&copy; 2026 Game Model Architect &middot; <a href="index.html">Home</a> &middot; <a href="app.html">App</a> &middot; <a href="blog.html">Blog</a></p></footer>
+<script>
+const ARTICLES=[
+{id:'start-here',title:'What Is a Game Model and Why Does Every Coach Need One?',cat:'fundamentals',read:'6 min',
+excerpt:"A game model isn't a formation — it's a living document that defines how your team plays in every phase. Here's why building one changes everything.",
+tags:['game model','philosophy','coaching identity'],
+body:`<h3>More Than a Formation</h3>
+<p>Too many coaches define their approach by a formation number — "I play 4-3-3" — and stop there. But a formation is just a starting shape. A <strong>game model</strong> is the complete set of behaviors, principles, and patterns you want your team to execute across every moment of a match.</p>
+<p>Think of it this way: two teams can both play a 4-2-3-1, but one might build from the back with patient possession while the other plays direct long balls to a target striker. Same formation, completely different game models.</p>
+<h3>The Five Phases Framework</h3>
+<p>Every game model should address what happens in each of the five phases of play:</p>
+<ul>
+<li><strong>Attacking (In Possession)</strong> — How do you progress the ball and create chances?</li>
+<li><strong>Defending (Out of Possession)</strong> — How do you organize to stop the opponent?</li>
+<li><strong>Transition to Attack</strong> — What happens the moment you win the ball?</li>
+<li><strong>Transition to Defense</strong> — What happens the moment you lose it?</li>
+<li><strong>Set Pieces</strong> — Both attacking and defending dead-ball situations.</li>
+</ul>
+<div class="callout"><strong>Key insight:</strong> Most coaches over-invest in attacking principles and under-invest in transitions. The moments of turnover are where games are won and lost — especially at higher levels.</div>
+<h3>Start With Identity, Not Tactics</h3>
+<p>Before picking any principles, ask yourself three questions: What are my non-negotiables? What does my squad do well? What level am I coaching?</p>
+<p>A youth grassroots coach prioritizing <span class="pr">High Pressing</span> and <span class="pr">Positional Play</span> will develop technically and tactically intelligent players. A semi-pro coach with limited training time might prioritize <span class="pr">Direct Play / Verticality</span> and <span class="pr">Mid-Block Defending</span> for faster implementation.</p>
+<p>Your game model should be <strong>authentic to you</strong> — not a copy of what you saw on TV last weekend.</p>
+<h3>How Many Principles Do You Need?</h3>
+<p>A common mistake is selecting too many. A focused game model might have 8–15 core principles with another 10–15 sub-principles. The goal isn't to cover everything — it's to create clarity. Players should be able to describe your game model in one sentence.</p>
+<div class="callout"><strong>Try this:</strong> Open the Game Model Builder and start by selecting just 2–3 principles per phase. You can always add more, but starting lean forces you to identify what really matters.</div>`},
+
+{id:'pressing-guide',title:'High Press, Mid-Block, or Low Block? Choosing Your Defensive Identity',cat:'defending',read:'8 min',
+excerpt:"The defensive structure you choose shapes everything else. Here's how to decide which approach fits your team — and why hybrid approaches often work best.",
+tags:['pressing','defensive shape','mid-block','low-block','high press'],
+body:`<h3>The Defensive Spectrum</h3>
+<p>Every team sits somewhere on a spectrum from aggressive high pressing to deep low-block defending. There's no right answer — but there is a right answer <strong>for your team</strong>.</p>
+<h3>High Pressing</h3>
+<p><span class="pr">High Pressing</span> means engaging the opponent in their own third. It's exciting, creates chances, and demands incredible fitness, coordination, and bravery. It's built on sub-principles like <span class="pr">Pressing Triggers</span>, <span class="pr">Cover Shadows</span>, and <span class="pr">Pressing Traps</span>.</p>
+<p><strong>Best for:</strong> Teams with high fitness levels, technically confident defenders, a goalkeeper comfortable with the ball, and enough training time (3+ sessions/week) to drill coordination.</p>
+<p><strong>Watch out:</strong> If your press breaks, you're exposed. You need <span class="pr">Counter-Pressing (Gegenpressing)</span> as a safety net and defenders comfortable in 1v1 situations with space behind.</p>
+<h3>Mid-Block Defending</h3>
+<p><span class="pr">Mid-Block Defending</span> is the most common approach across world football. You concede territory but organize a compact shape in the middle third. Sub-principles like <span class="pr">Horizontal Compactness</span> and <span class="pr">Vertical Compactness</span> are central.</p>
+<p><strong>Best for:</strong> Teams at any level. Pragmatic, requires less extreme fitness, and gives attackers space to counter into. Easier to implement with limited training time.</p>
+<div class="callout"><strong>The hybrid approach:</strong> Many elite teams use a "press with triggers" model — start in a mid-block but trigger a high press when specific cues appear (backward pass, heavy touch, ball near touchline). This gives control without 90-minute pressing demands.</div>
+<h3>Low Block</h3>
+<p><span class="pr">Low-Block Defense</span> means defending deep near your penalty area. It prioritizes <span class="pr">Shot Blocking & Box Defense</span> and requires extreme discipline.</p>
+<p><strong>Best for:</strong> Facing stronger opponents, protecting leads, or teams with limited offensive ability.</p>
+<h3>Making Your Choice</h3>
+<ul>
+<li>Can my players sustain high-intensity pressing? → If yes, consider high press</li>
+<li>Do I have 3+ training sessions per week? → If not, mid-block is safer</li>
+<li>Is my goalkeeper comfortable with the ball? → Required for high pressing</li>
+<li>How fast are my center-backs? → Slow CBs + high line = danger</li>
+</ul>
+<div class="callout"><strong>Principle pairing tip:</strong> High Press pairs with <span class="pr">Gegenpressing</span> for transitions. Mid-Block pairs with <span class="pr">Counter-Attacking</span>. Each creates a coherent identity.</div>`},
+
+{id:'build-up-styles',title:'Build From the Back or Go Direct? Finding Your Attacking DNA',cat:'attacking',read:'7 min',
+excerpt:"How you start your attacks defines your game model more than any other choice. Here's how to find the right balance between patient build-up and direct play.",
+tags:['build-up play','direct play','possession','verticality'],
+body:`<h3>The Fundamental Choice</h3>
+<p>When your goalkeeper has the ball, what happens next? This single moment defines more about your team's identity than almost anything else. The two poles are <span class="pr">Build-Up Play</span> (patient, short passing from the back) and <span class="pr">Direct Play / Verticality</span> (forward quickly, bypass midfield).</p>
+<h3>Patient Build-Up</h3>
+<p>Building from the back involves <span class="pr">Short Goal Kicks</span>, <span class="pr">GK as Sweeper-Keeper</span>, and <span class="pr">Playing Through the Press</span>. It's connected to <span class="pr">Positional Play</span> and demands comfort on the ball from every player.</p>
+<p><strong>Why choose it:</strong> You control the game. You tire the opponent. You develop intelligent players. You attract and manipulate the opponent's press to create space.</p>
+<p><strong>The risk:</strong> Turnovers in your own third can be fatal. Every player needs to be press-resistant.</p>
+<h3>Direct Play</h3>
+<p>Smart direct play uses <span class="pr">Target Man Play</span> and <span class="pr">Long Diagonal Balls</span> with purposeful runners and organized second-ball recovery.</p>
+<p><strong>Why choose it:</strong> Fast to implement. Bypasses the press entirely. Suits teams with a physical striker, fast wide players, or limited training time.</p>
+<div class="callout"><strong>The best teams do both.</strong> They build patiently against a low block but go direct when the press is disorganized. Adding <span class="pr">Tempo Changes</span> to your model lets you switch between modes.</div>
+<h3>Questions to Guide Your Choice</h3>
+<ul>
+<li>Are my center-backs comfortable passing under pressure?</li>
+<li>Do I have a dominant aerial striker?</li>
+<li>How high does the opponent typically press?</li>
+<li>What's my goalkeeper like with their feet?</li>
+</ul>`},
+
+{id:'transitions-matter',title:'The 5-Second Window: Why Transitions Win Championships',cat:'transitions',read:'6 min',
+excerpt:"The moments after winning or losing the ball are the most dangerous in football. Here's why transition principles belong at the top of every game model.",
+tags:['transitions','counter-pressing','counter-attacking','gegenpressing'],
+body:`<h3>The Neglected Phase</h3>
+<p>A disproportionate number of goals come from transition moments — the 3–8 seconds after the ball changes hands when both teams are disorganized. If your game model doesn't explicitly address transitions, you're leaving the most decisive moments to chance.</p>
+<h3>Transition to Attack: Counter or Control?</h3>
+<p>When you win the ball, you face an instant decision: <span class="pr">Counter-Attacking</span> (attack at speed) or <span class="pr">Organized Possession After Winning</span> (secure and build).</p>
+<div class="callout"><strong>The counter-attack checklist:</strong> Do you have a numerical advantage ahead of the ball? Is there space to attack? Are fast players in position? If yes to all three → counter. If not → secure and build.</div>
+<h3>Transition to Defense: The Gegenpressing Revolution</h3>
+<p><span class="pr">Counter-Pressing (Gegenpressing)</span> has transformed modern football. When you lose the ball, don't retreat — immediately press to win it back within 5 seconds. Sub-principles: <span class="pr">Ball-Near Counter-Press</span> (players swarm) and <span class="pr">Ball-Far Recovery</span> (players recover goal-side).</p>
+<p><strong>The alternative:</strong> <span class="pr">Immediate Retreat</span> — dropping into shape. Safer but gives up territory. Some coaches counter-press in the opponent's half but retreat in their own.</p>
+<h3>Building Your Transition Principles</h3>
+<p>At minimum, every game model needs:</p>
+<ul>
+<li><strong>One "win ball" principle:</strong> What do we do the moment we win it?</li>
+<li><strong>One "lose ball" principle:</strong> What do we do the moment we lose it?</li>
+<li><strong>Conditional triggers:</strong> When do we counter vs. secure?</li>
+</ul>
+<div class="callout"><strong>Pairing guide:</strong> High Press + Gegenpressing = Klopp. Mid-Block + Counter-Attacking = Mourinho. Positional Play + Organized Possession = Guardiola.</div>`},
+
+{id:'set-piece-edge',title:'Set Pieces: The Easiest Way to Win More Games',cat:'setpieces',read:'5 min',
+excerpt:"Set pieces account for roughly 30% of all goals. Yet most coaches spend less than 10% of training time on them. Here's how to close that gap.",
+tags:['set pieces','corners','free kicks','throw-ins'],
+body:`<h3>The Numbers Don't Lie</h3>
+<p>Across professional leagues, set pieces account for 25–35% of all goals. At amateur and youth levels, that percentage is often higher. Despite this, most teams barely practice them.</p>
+<p>Adding just 2–3 well-rehearsed routines can be the single highest-impact change you make.</p>
+<h3>Attacking Set Pieces</h3>
+<p>Start with <span class="pr">Attacking Corners</span>. You don't need 15 routines — you need 2–3 your players can execute in their sleep. Consider <span class="pr">Near-Post Corner Routines</span> and <span class="pr">Short Corner Routines</span>.</p>
+<p>For <span class="pr">Attacking Free Kicks</span>, have one direct and one indirect routine. Don't ignore <span class="pr">Throw-In Routines</span> — losing possession from a throw-in is one of the most preventable errors.</p>
+<h3>Defending Set Pieces</h3>
+<p>The biggest decision: <span class="pr">Zonal Corner Defense</span> vs. <span class="pr">Man-Marking Corner Defense</span>. Zonal is better in theory but requires discipline. Man-marking is simpler but vulnerable to movement.</p>
+<div class="callout"><strong>Recommendation:</strong> Use a hybrid. Assign best headers to key zones, man-mark the opponent's biggest aerial threat, and put a player on each post.</div>
+<h3>The Quick Restart Weapon</h3>
+<p><span class="pr">Quick Restarts</span> is the most underused principle. Training players to take restarts quickly — before the opponent organizes — creates chances from nothing.</p>
+<h3>Set Piece Selection Checklist</h3>
+<ul>
+<li>Pick 2–3 attacking corner routines maximum</li>
+<li>Have 1 direct and 1 indirect free kick routine</li>
+<li>Decide zonal, man-marking, or hybrid for defending</li>
+<li>Always assign <span class="pr">Counter Protection from Set Pieces</span></li>
+</ul>`},
+
+{id:'youth-model',title:'Building a Game Model for Youth Development: Principles Over Results',cat:'philosophy',read:'7 min',
+excerpt:"Youth coaching isn't about winning — it's about developing players. Here's how to build a game model that prioritizes learning while still being competitive.",
+tags:['youth development','coaching philosophy','player development','grassroots'],
+body:`<h3>Development First, Results Second</h3>
+<p>The purpose of a youth game model is fundamentally different from a senior one. You're building players who can perform at the next level in 3–5 years. This changes which principles you prioritize.</p>
+<h3>Non-Negotiable Principles for Youth</h3>
+<p><span class="pr">Build-Up Play</span> and <span class="pr">Playing Through the Press</span> — Every young player should be comfortable receiving under pressure. Even if it costs goals now, it builds press-resistant players.</p>
+<p><span class="pr">Positional Play</span> — Understanding spacing, movement off the ball, and zone occupation is foundational intelligence.</p>
+<p><span class="pr">High Pressing</span> — Teaches proactive, aggressive defending and develops tactical reading.</p>
+<div class="callout"><strong>The golden rule:</strong> Choose principles that develop <em>individual decision-making</em>. A player who understands <em>why</em> they press will adapt to any system as they grow.</div>
+<h3>Principles to Deprioritize at Youth Level</h3>
+<p><span class="pr">Low-Block Defense</span> — Sitting deep doesn't develop players. Save it for senior level.</p>
+<p><span class="pr">Direct Play</span> as a primary approach — Going long bypasses learning moments in midfield.</p>
+<p><span class="pr">Tactical Fouling</span> — Youth players should learn to defend properly first.</p>
+<h3>The Age-Appropriate Progression</h3>
+<ul>
+<li><strong>U8–U10:</strong> 1v1s, dribbling, basic awareness. 2–3 principles max.</li>
+<li><strong>U11–U13:</strong> Build-up, basic pressing, combinations. 5–8 principles across 3 phases.</li>
+<li><strong>U14–U16:</strong> Full 5-phase model. Introduce positional play, pressing traps, set pieces.</li>
+<li><strong>U17–U19:</strong> Near-senior complexity. Add game management and adaptation.</li>
+</ul>
+<div class="callout"><strong>Building your youth model:</strong> Start with just Attacking and Defending phases. Select 2–3 principles per phase that emphasize decision-making. Add Transition and Set Piece principles as players mature.</div>`},
+
+{id:'coherent-model',title:'How to Check if Your Game Model is Coherent (The Compatibility Test)',cat:'fundamentals',read:'5 min',
+excerpt:"Not all principles work together. Learn how to spot contradictions in your game model and build a system where every piece supports the whole.",
+tags:['game model','coherence','compatibility','system design'],
+body:`<h3>The Contradiction Problem</h3>
+<p>A common mistake is selecting principles that conflict. For example: choosing <span class="pr">Ball Retention & Patience</span> as core attacking but <span class="pr">Counter-Attacking</span> as primary transition. These create tension that confuses players.</p>
+<h3>The Compatibility Framework</h3>
+<p><strong>1. Do your defensive and attacking phases align?</strong></p>
+<ul>
+<li>High Press → Positional Play → Gegenpressing</li>
+<li>Mid-Block → Counter-Attacking → Direct Play options</li>
+<li>Low Block → Counter-Attacking → Target Man</li>
+</ul>
+<p><strong>2. Do transitions match your shape?</strong></p>
+<p>If you counter-press, players need to be close enough to swarm. If you retreat, attackers can stay higher.</p>
+<p><strong>3. Can your squad execute it?</strong></p>
+<p><span class="pr">Positional Play</span> with technically limited players leads to turnovers. <span class="pr">High Pressing</span> with unfit players leads to gaps. Be honest about abilities.</p>
+<div class="callout"><strong>The one-sentence test:</strong> Can you describe your game model in one sentence? Example: "We press high, build patiently, and counter-press on loss." If it has contradictions, simplify.</div>
+<h3>Red Flags to Watch For</h3>
+<ul>
+<li>More than 5 "core" attacking principles (too complex)</li>
+<li>No transition principles (most dangerous phase unplanned)</li>
+<li>Defensive identity changes weekly (players need consistency)</li>
+<li>Principles requiring attributes your squad doesn't have</li>
+<li>No set piece principles (free wins left on table)</li>
+</ul>
+<h3>The Iteration Process</h3>
+<p>Your game model evolves. After every 4–5 matches, review: Which principles work? Which cause confusion? Where are you conceding? Adjust 1–2 principles at a time — never overhaul everything at once.</p>`}
+];
+
+const CATS=[{id:'all',label:'All Articles'},{id:'fundamentals',label:'Fundamentals'},{id:'attacking',label:'Attacking'},{id:'defending',label:'Defending'},{id:'transitions',label:'Transitions'},{id:'setpieces',label:'Set Pieces'},{id:'philosophy',label:'Philosophy'}];
+let activeCat='all',openId=null;
+
+function renderFilters(){
+  document.getElementById('blogFilters').innerHTML=CATS.map(c=>'<button class="bf '+(activeCat===c.id?'active':'')+'" onclick="filterCat(\''+c.id+'\')">'+c.label+'</button>').join('');
+}
+function filterCat(c){activeCat=c;openId=null;renderFilters();renderArticles()}
+function renderArticles(){
+  const list=activeCat==='all'?ARTICLES:ARTICLES.filter(a=>a.cat===activeCat);
+  document.getElementById('articleList').innerHTML=list.map(a=>{
+    const isOpen=openId===a.id;
+    return '<div class="article-card '+(isOpen?'open':'')+'" id="card-'+a.id+'">'
+      +'<div class="article-inner" onclick="'+(isOpen?'':'openArticle(\''+a.id+'\')')+'">'
+      +'<div class="article-meta"><span class="article-cat '+a.cat+'">'+a.cat+'</span><span class="article-read">'+a.read+'</span></div>'
+      +'<h2>'+a.title+'</h2>'
+      +(isOpen?'':'<p class="excerpt">'+a.excerpt+'</p>')
+      +(isOpen?'':'<div class="article-tags">'+a.tags.map(t=>'<span class="article-tag">'+t+'</span>').join('')+'</div><span class="article-link">Read article <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>')
+      +'</div>'
+      +'<div class="article-full"><div class="article-body">'+a.body+'</div>'
+      +'<div class="article-tags" style="margin-top:20px">'+a.tags.map(t=>'<span class="article-tag">'+t+'</span>').join('')+'</div>'
+      +'<button class="back-btn" onclick="event.stopPropagation();closeArticle()">← Back to all articles</button>'
+      +'</div></div>';
+  }).join('');
+}
+function openArticle(id){
+  openId=id;renderArticles();
+  setTimeout(function(){var el=document.getElementById('card-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},50);
+}
+function closeArticle(){openId=null;renderArticles();window.scrollTo({top:0,behavior:'smooth'})}
+renderFilters();renderArticles();
+</script>
+</body>
+</html>

@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Model Architect</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0f0d;--surface:#111916;--surface-hover:#182220;--border:#1e2e28;--border-active:#2d6b4f;--green:#34d399;--green-dim:#1a7a52;--glow:rgba(52,211,153,0.15);--text:#e8f0ec;--text2:#8fa89b;--text3:#4a6358;--att:#f59e0b;--def:#ef4444;--tra:#3b82f6;--trd:#a855f7;--sp:#ec4899}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(52,211,153,0.015) 60px,rgba(52,211,153,0.015) 61px);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:40px 20px 100px}
+.hdr{text-align:center;margin-bottom:24px}
+.logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--green-dim));display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 6px 24px rgba(52,211,153,0.2);padding:6px}
+.logo svg{width:30px;height:30px;color:var(--bg)}
+h1{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:3px;line-height:1;margin-bottom:6px}
+h1 span{color:var(--green)}
+.subtitle{color:var(--text2);font-size:14px;max-width:520px;margin:0 auto;line-height:1.4}
+/* Tabs */
+.tabs{display:flex;justify-content:center;gap:4px;background:var(--surface);border-radius:12px;padding:4px;max-width:360px;margin:0 auto 24px}
+.tab{flex:1;padding:10px 16px;border-radius:10px;border:none;background:transparent;color:var(--text2);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s}
+.tab.active{background:var(--green-dim);color:var(--text)}
+.tab-badge{background:rgba(52,211,153,0.2);color:var(--green);font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;margin-left:2px;display:none}
+.tab-badge.show{display:inline}
+/* Search */
+.search-box{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;display:flex;align-items:center;padding:0 16px;gap:10px;margin-bottom:12px;transition:border-color 0.3s,box-shadow 0.3s}
+.search-box:focus-within{border-color:var(--border-active);box-shadow:0 0 0 4px var(--glow)}
+.search-box svg{flex-shrink:0;color:var(--text3);transition:color 0.3s}
+.search-box:focus-within svg{color:var(--green)}
+#searchInput{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:15px;padding:14px 0}
+#searchInput::placeholder{color:var(--text3)}
+.clear-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px;border-radius:6px;display:none;line-height:0}
+.clear-btn:hover{color:var(--text)}
+.clear-btn.show{display:block}
+/* Filters */
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:6px 12px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:0.4px;text-transform:uppercase;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all 0.2s;user-select:none}
+.chip:hover{background:var(--surface-hover)}
+.chip.active-att{border-color:var(--att);color:var(--att);background:rgba(245,158,11,0.08)}
+.chip.active-def{border-color:var(--def);color:var(--def);background:rgba(239,68,68,0.08)}
+.chip.active-tra{border-color:var(--tra);color:var(--tra);background:rgba(59,130,246,0.08)}
+.chip.active-trd{border-color:var(--trd);color:var(--trd);background:rgba(168,85,247,0.08)}
+.chip.active-sp{border-color:var(--sp);color:var(--sp);background:rgba(236,72,153,0.08)}
+.spacer{flex:1}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:5px;transition:all 0.2s}
+.btn-ghost:hover{background:var(--surface-hover);color:var(--text)}
+/* Prominent Add Custom CTA */
+.btn-add-custom{background:linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.05));color:var(--green);border:1.5px dashed var(--green);border-radius:10px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.25s;letter-spacing:0.3px;text-transform:uppercase;animation:pulseGlow 3s ease-in-out infinite}
+.btn-add-custom:hover{background:linear-gradient(135deg,rgba(52,211,153,0.25),rgba(52,211,153,0.1));border-color:#4eeab8;transform:translateY(-1px);box-shadow:0 4px 20px rgba(52,211,153,0.2)}
+.btn-add-custom.active-cancel{background:rgba(239,68,68,0.1);color:var(--def);border-color:var(--def);animation:none}
+.btn-add-custom.active-cancel:hover{background:rgba(239,68,68,0.15)}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}50%{box-shadow:0 0 0 6px rgba(52,211,153,0.08)}}
+/* Export buttons */
+.export-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-export{border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
+.btn-export.txt{background:var(--green-dim);color:var(--text)}
+.btn-export.txt:hover{background:#1f8f5e}
+.btn-export.img{background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff}
+.btn-export.img:hover{background:linear-gradient(135deg,#60a5fa,#2563eb)}
+.btn-export.tac{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
+.btn-export.tac:hover{background:linear-gradient(135deg,#c084fc,#8b5cf6)}
+/* Image export canvas container (offscreen) */
+#exportCanvas{position:absolute;left:-9999px;top:-9999px}
+.btn-primary{background:var(--green-dim);color:var(--text);border:none;border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
+.btn-primary:hover{background:#1f8f5e}
+.btn-primary:disabled{opacity:0.5;cursor:default}
+.btn-sm{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:3px;font-size:11px;font-family:inherit;transition:all 0.15s;line-height:0}
+.btn-sm:hover{color:var(--text);background:rgba(255,255,255,0.05)}
+.btn-sm.red:hover{color:var(--def)}
+/* Info */
+.info{font-size:12px;color:var(--text3);margin-bottom:12px;padding-left:2px}
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:6px;cursor:pointer;transition:all 0.2s}
+.card:hover{border-color:var(--border-active);background:var(--surface-hover)}
+.card.expanded{border-color:var(--border-active);background:#151f1b}
+.card.is-sub{margin-left:24px;border-left:3px solid var(--border)}
+.card.is-sub:hover{border-left-color:var(--green-dim)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px}
+.card-title{font-weight:700;font-size:14px;color:var(--text);line-height:1.3;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.card-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.phase-badge{padding:3px 8px;border-radius:100px;font-size:9.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;white-space:nowrap}
+.phase-badge.att{color:var(--att);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25)}
+.phase-badge.def{color:var(--def);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25)}
+.phase-badge.tra{color:var(--tra);background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25)}
+.phase-badge.trd{color:var(--trd);background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.25)}
+.phase-badge.sp{color:var(--sp);background:rgba(236,72,153,0.1);border:1px solid rgba(236,72,153,0.25)}
+.card-desc{font-size:12.5px;color:var(--text2);line-height:1.5;margin-top:4px}
+.card-bottom{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tag{padding:2px 7px;border-radius:5px;font-size:10px;font-weight:500;color:var(--green);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2)}
+.sub-badge,.custom-badge{display:inline-block;font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+.sub-badge{color:var(--text3);background:rgba(255,255,255,0.04)}
+.custom-badge{color:var(--green);background:rgba(52,211,153,0.1)}
+.ref-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700;letter-spacing:0.8px;font-family:'Bebas Neue',system-ui,sans-serif;color:var(--text);background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);margin-right:4px}
+/* Metrics */
+.metrics-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.metric{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:600;color:#60a5fa;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.18)}
+.metric svg{flex-shrink:0}
+.metrics-label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:8px;margin-bottom:3px}
+.model-metrics{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.model-metrics .metric{font-size:9px;padding:2px 7px}
+.parent-count{font-size:10px;color:var(--green-dim);font-weight:600}
+.btn-add{border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;font-family:inherit;transition:all 0.2s;background:transparent;color:var(--text2)}
+.btn-add:hover{border-color:var(--green-dim);color:var(--green)}
+.btn-add.in-model{background:rgba(52,211,153,0.1);color:var(--green);border-color:rgba(52,211,153,0.3);opacity:0.7;cursor:default}
+.card-details{display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;font-size:12px;color:var(--text3);line-height:1.6}
+.card.expanded .card-details{display:block}
+.chev{transition:transform 0.2s;display:inline-block}
+.card.expanded .chev{transform:rotate(180deg)}
+mark{background:rgba(52,211,153,0.25);color:var(--green);border-radius:2px;padding:0 1px}
+/* Add form */
+.add-form{background:var(--surface);border:1.5px solid var(--border-active);border-radius:14px;padding:20px;margin-bottom:16px;display:none}
+.add-form.show{display:block}
+.form-title{font-weight:700;font-size:15px;color:var(--green);margin-bottom:14px}
+.form-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:14px;outline:none;margin-bottom:12px}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--border-active)}
+.form-textarea{resize:vertical;min-height:60px;font-size:13px}
+/* Builder */
+.builder-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.model-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--green);cursor:pointer}
+.model-name-hint{font-size:12px;color:var(--text3);font-family:'DM Sans',sans-serif;letter-spacing:0;margin-left:6px}
+.model-name-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;outline:none;width:280px}
+.phase-section{margin-bottom:20px}
+.phase-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;border-radius:10px}
+.phase-header.att{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2)}
+.phase-header.def{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2)}
+.phase-header.tra{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2)}
+.phase-header.trd{background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.2)}
+.phase-header.sp{background:rgba(236,72,153,0.06);border:1px solid rgba(236,72,153,0.2)}
+.phase-dot{width:10px;height:10px;border-radius:3px}
+.phase-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px}
+.phase-count{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px}
+.empty-phase{padding:16px;border:1px dashed var(--border);border-radius:10px;text-align:center;color:var(--text3);font-size:13px}
+.model-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.model-card:hover{border-color:var(--border-active)}
+.model-card-body{flex:1;min-width:0}
+.model-card-title{font-weight:600;font-size:13.5px;color:var(--text);display:flex;align-items:center;gap:6px}
+.model-card-desc{font-size:12px;color:var(--text2);margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.model-card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.model-card-tags .tag{font-size:9px}
+.move-btns{display:flex;flex-direction:column;gap:2px}
+.empty-builder{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-builder p{font-size:13px;max-width:400px;margin:0 auto;line-height:1.6}
+.model-summary{text-align:center;margin-top:20px;padding:16px;background:var(--surface);border-radius:12px;border:1px solid var(--border);font-size:13px;color:var(--text2)}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--green-dim);color:var(--text);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:1000;box-shadow:0 8px 32px rgba(0,0,0,0.4);white-space:nowrap;opacity:0;transition:all 0.3s ease;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:600px){
+  h1{font-size:30px}.app{padding:30px 14px 80px}.card.is-sub{margin-left:14px}
+  .builder-header{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hdr">
+    <div id="userBar" style="text-align:right;margin-bottom:10px"></div>
+    <div class="logo"><svg viewBox="0 0 64 64" fill="none"><path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="3" fill="none"/><circle cx="32" cy="14" r="2.5" fill="currentColor"/><circle cx="18" cy="24" r="2.5" fill="currentColor"/><circle cx="46" cy="24" r="2.5" fill="currentColor"/><circle cx="22" cy="40" r="2.5" fill="currentColor"/><circle cx="42" cy="40" r="2.5" fill="currentColor"/><circle cx="32" cy="50" r="2.5" fill="currentColor"/><line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg></div>
+    <h1>GAME MODEL <span>ARCHITECT</span></h1>
+    <p class="subtitle">Search 100+ principles, create your own, and build a complete game model</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabLibrary" onclick="switchView('library')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+      Library
+    </button>
+    <button class="tab" id="tabBuilder" onclick="switchView('builder')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      My Model <span class="tab-badge" id="modelBadge">0</span>
+    </button>
+  </div>
+
+  <div id="libraryView">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search principles... e.g. pressing, build-up, overlap" autocomplete="off">
+      <button class="clear-btn" id="clearBtn" onclick="clearSearch()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="filters" id="filtersRow"></div>
+    <div id="addFormContainer"></div>
+    <div class="info" id="resultsInfo"></div>
+    <div id="resultsList"></div>
+  </div>
+
+  <div id="builderView" style="display:none"></div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ═══ DATA ═══
+const RAW=[
+{id:1,t:"Build-Up Play",ph:"Attacking",pa:null,d:"Organized progression from the defensive third into midfield using short passes, movement, and patient circulation.",tg:["possession","build-up","progression"],mt:["Passes from Def. Third","Build-Up Attacks","GK Short Pass %"]},
+{id:2,t:"Short Goal Kicks",ph:"Attacking",pa:1,d:"Playing goal kicks short to center-backs or fullbacks to initiate build-up and attract the opponent's press.",tg:["goal kick","goalkeeper","short passing"],mt:["Short Goal Kick %","Goal Kick Completion %"]},
+{id:3,t:"Playing Through the Press",ph:"Attacking",pa:1,d:"Breaking the opponent's high press through quick combinations, individual skill, or rehearsed patterns.",tg:["press resistance","composure"],mt:["Press Escapes","Passes Under Pressure"]},
+{id:4,t:"GK as Sweeper-Keeper",ph:"Attacking",pa:1,d:"Goalkeeper acting as an extra outfield player with high starting position, comfortable with feet.",tg:["goalkeeper","sweeper-keeper"],mt:["GK Passes Attempted","GK Avg. Position Height"]},
+{id:5,t:"GK Distribution Strategy",ph:"Attacking",pa:1,d:"Intentional patterns for how the goalkeeper restarts play — short, long, or throws.",tg:["goalkeeper","distribution"],mt:["GK Distribution Accuracy"]},
+{id:6,t:"Positional Play",ph:"Attacking",pa:null,d:"Occupying specific zones with optimal spacing to create numerical, positional, and qualitative superiority.",tg:["possession","spacing","Guardiola"],mt:["Possession %","Passes Per Sequence","Field Tilt %"]},
+{id:7,t:"Half-Space Exploitation",ph:"Attacking",pa:6,d:"Targeting zones between center and wings where diagonal passing lanes open up.",tg:["half-spaces","creative play"],mt:["Half-Space Entries","Passes into Half-Spaces"]},
+{id:8,t:"Third-Man Concept",ph:"Attacking",pa:6,d:"Using a pass to a second player to attract pressure, allowing a third to receive in space.",tg:["third man","combination"]},
+{id:9,t:"Maintaining the Structure",ph:"Attacking",pa:6,d:"Ensuring team shape stays balanced — if one vacates a zone, another fills it.",tg:["balance","rotation","structure"]},
+{id:10,t:"Positional Superiority Through Rotation",ph:"Attacking",pa:6,d:"Rotating positions to create confusion without adding players to the zone.",tg:["rotation","positional","confusion"]},
+{id:11,t:"Width in Attack",ph:"Attacking",pa:null,d:"Stretching the opponent horizontally using wide players, creating gaps for central penetration.",tg:["width","wingers","stretching"],mt:["Touches in Wide Zones","Wide Entries per Game"]},
+{id:12,t:"Overlapping Runs",ph:"Attacking",pa:11,d:"Fullback running outside the winger to create a 2v1 on the flank.",tg:["overlap","fullback","2v1"],mt:["Overlapping Run Frequency","Crosses from Overlap"]},
+{id:13,t:"Underlapping Runs",ph:"Attacking",pa:11,d:"Midfielder or fullback running inside the winger into the half-space channel.",tg:["underlap","half-space"],mt:["Underlap Run Frequency"]},
+{id:14,t:"Inverted Wingers",ph:"Attacking",pa:11,d:"Wide players cutting inside onto stronger foot to shoot or combine centrally.",tg:["inverted","cut inside"],mt:["Shots from Cut-Ins","Carry into Box"]},
+{id:15,t:"Line-Breaking Passes",ph:"Attacking",pa:null,d:"Vertical passes that bypass an entire line of the opponent's defensive structure.",tg:["vertical","penetration"],mt:["Progressive Passes","Line Breaks per Game"]},
+{id:16,t:"Receiving Between the Lines",ph:"Attacking",pa:15,d:"Positioning between opponent lines with body shape to turn and face forward.",tg:["between lines","half-turn"],mt:["Receptions Between Lines","Forward-Facing Receives"]},
+{id:17,t:"Switching Play",ph:"Attacking",pa:15,d:"Rapid changes in point of attack to exploit the weak side.",tg:["switch","diagonal","weak side"],mt:["Switches of Play per Game"]},
+{id:18,t:"Final Third Combination Play",ph:"Attacking",pa:null,d:"Quick short passing near the box — wall passes, third-man runs, rotations.",tg:["final third","combination","wall pass"],mt:["Final Third Entries","Passes in Final Third"]},
+{id:19,t:"Crossing & Delivery",ph:"Attacking",pa:18,d:"Delivering into the box — early crosses, cutbacks, pull-backs, driven deliveries.",tg:["crossing","delivery"],mt:["Crosses Attempted","Cross Completion %","Chances from Crosses"]},
+{id:20,t:"Overloading the Box",ph:"Attacking",pa:18,d:"Getting multiple players into the box to outnumber defenders.",tg:["box entries","numbers"],mt:["Players in Box at Cross","Box Entries per Attack"]},
+{id:21,t:"Playing Behind the Line",ph:"Attacking",pa:18,d:"Through-balls and timed runs to exploit space behind the last line.",tg:["through ball","in behind","depth"],mt:["Through Balls Attempted","Runs in Behind"]},
+{id:22,t:"Creating 1v1 Situations",ph:"Attacking",pa:null,d:"Isolating skilful attackers against individual defenders.",tg:["1v1","dribbling","isolation"],mt:["Successful Dribbles","1v1 Take-On %"]},
+{id:23,t:"Direct Play / Verticality",ph:"Attacking",pa:null,d:"Prioritizing forward passes and quick vertical progression.",tg:["direct","long ball","vertical"],mt:["Direct Attacks","Long Ball Accuracy %"]},
+{id:24,t:"Target Man Play",ph:"Attacking",pa:23,d:"Using a dominant striker as focal point for long balls and hold-up play.",tg:["target man","hold-up","aerial"],mt:["Aerial Duels Won %","Hold-Up Plays"]},
+{id:25,t:"Long Diagonal Balls",ph:"Attacking",pa:23,d:"Accurate long diagonals from deep to switch play or find runners.",tg:["diagonal","long pass"],mt:["Long Pass Accuracy %"]},
+{id:26,t:"Ball Retention & Patience",ph:"Attacking",pa:null,d:"Keeping possession to control tempo and wait for the right moment to accelerate.",tg:["possession","patience","tempo"],mt:["Possession %","Avg. Sequence Length","Pass Completion %"]},
+{id:27,t:"Tempo Changes",ph:"Attacking",pa:26,d:"Shifting from slow build-up to sudden acceleration to catch defenses off guard.",tg:["tempo","acceleration","rhythm"]},
+{id:28,t:"Possession Recycling",ph:"Attacking",pa:26,d:"Moving the ball backward to reset and find new angles of penetration.",tg:["recycling","reset","angles"]},
+{id:29,t:"Counter-Attack Prevention via Possession",ph:"Attacking",pa:26,d:"Using possession as defense — the opponent can't counter if you have the ball.",tg:["prevention","control"]},
+{id:30,t:"Striker Movement Patterns",ph:"Attacking",pa:null,d:"Center-forward runs — dropping deep, spinning behind, drifting wide, holding the line.",tg:["striker","movement","runs"]},
+{id:31,t:"Rotations & Position Swaps",ph:"Attacking",pa:30,d:"Players exchanging positions fluidly to confuse defensive assignments.",tg:["rotation","interchange"]},
+{id:32,t:"Blindside Runs",ph:"Attacking",pa:30,d:"Runs from outside the defender's sight — arriving unmarked from behind.",tg:["blindside","off the ball"]},
+{id:33,t:"Creating Numerical Superiority",ph:"Attacking",pa:null,d:"Generating extra-man advantages through movement and structural adjustments.",tg:["overload","superiority"]},
+{id:34,t:"Wide Overloads",ph:"Attacking",pa:33,d:"Extra players on one flank for 2v1 or 3v2 situations.",tg:["wide overload","flank"]},
+{id:35,t:"Central Overloads",ph:"Attacking",pa:33,d:"Flooding the central zone to outnumber opponent midfield.",tg:["central","midfield dominance"]},
+{id:36,t:"High Pressing",ph:"Defending",pa:null,d:"Pressing aggressively in the opponent's third to win the ball near their goal.",tg:["pressing","high press","intensity"],mt:["PPDA (Passes Per Def. Action)","High Turnovers Won","Pressures in Opp. Third"]},
+{id:37,t:"Pressing Triggers",ph:"Defending",pa:36,d:"Cues that initiate coordinated pressing — backward pass, heavy touch, touchline.",tg:["triggers","cues","coordination"],mt:["Press Success Rate"]},
+{id:38,t:"Cover Shadows",ph:"Defending",pa:36,d:"Pressing at angles that block passing lanes while closing down.",tg:["cover shadow","lane blocking"]},
+{id:39,t:"Pressing Traps",ph:"Defending",pa:36,d:"Guiding opponents into zones for coordinated pressing to win possession.",tg:["trap","touchline","Klopp"]},
+{id:40,t:"Pressing Coordination Across Lines",ph:"Defending",pa:36,d:"All three lines pressing in synchronized coordination.",tg:["coordination","lines","collective"]},
+{id:41,t:"Pressing Endurance",ph:"Defending",pa:36,d:"Fitness to sustain high-intensity pressing for 90 minutes.",tg:["fitness","endurance"]},
+{id:42,t:"Mid-Block Defending",ph:"Defending",pa:null,d:"Organized shape in the middle third protecting central zones.",tg:["mid-block","compact","organization"],mt:["Opp. Final Third Entries Allowed","Defensive Line Height"]},
+{id:43,t:"Horizontal Compactness",ph:"Defending",pa:42,d:"Narrow lines to deny central space, forcing opponents wide.",tg:["compact","narrow"],mt:["Opp. Passes in Central Zone"]},
+{id:44,t:"Vertical Compactness",ph:"Defending",pa:42,d:"Minimizing distance between lines to deny creative space.",tg:["compact","squeezing"],mt:["Distance Between Lines (m)"]},
+{id:45,t:"Low-Block Defense",ph:"Defending",pa:null,d:"Deep compact setup near own box — solidity and discipline.",tg:["low block","deep defense"],mt:["Shots Blocked","Opp. xG Conceded","Clearances"]},
+{id:46,t:"Shot Blocking & Box Defense",ph:"Defending",pa:45,d:"Organizing bodies to block shots and contest every cross.",tg:["shot blocking","box defending"],mt:["Shots Blocked per Game","Cross Block %"]},
+{id:47,t:"Defending the Back Post",ph:"Defending",pa:45,d:"Far post always covered during crosses and set pieces.",tg:["back post","far post"]},
+{id:48,t:"Zonal Defending",ph:"Defending",pa:null,d:"Defending zones rather than individuals — shape and spatial coverage.",tg:["zonal","shape"]},
+{id:49,t:"Man-Oriented Defending",ph:"Defending",pa:null,d:"Individual marking to deny specific opponents time and space.",tg:["man-marking","tracking"]},
+{id:50,t:"Hybrid Defending",ph:"Defending",pa:null,d:"Combining zonal structure with man-marking of key opponents.",tg:["hybrid","flexible"]},
+{id:51,t:"Defensive Line Management",ph:"Defending",pa:null,d:"Coordinating the back line — push up, drop, hold, offside trap.",tg:["offside trap","defensive line"],mt:["Offsides Won","Defensive Line Height"]},
+{id:52,t:"Pressing the Ball Carrier",ph:"Defending",pa:null,d:"Individual technique closing down — angle, speed, body position.",tg:["closing down","1v1","jockeying"],mt:["Tackles Won","1v1 Def. Win %","Pressures Applied"]},
+{id:53,t:"Second Defender (Cover)",ph:"Defending",pa:52,d:"Cover behind the first defender, ready to step in if beaten.",tg:["cover","support"]},
+{id:54,t:"Third Defender (Balance)",ph:"Defending",pa:52,d:"Balance on the weak side, cutting off switches.",tg:["balance","weak side"]},
+{id:55,t:"Defending Counter-Attacks",ph:"Defending",pa:null,d:"Dealing with fast counters — delay, recover numbers, organize.",tg:["counter-attack","recovery"],mt:["Opp. Counter-Attack Goals","Recovery Runs per Game"]},
+{id:56,t:"Defending Wide Areas",ph:"Defending",pa:null,d:"Flank defense — fullback positioning, preventing crosses.",tg:["wide defending","fullback"],mt:["Crosses Faced","Cross Block Rate"]},
+{id:57,t:"Defending Central Zones",ph:"Defending",pa:null,d:"Protecting the central corridor — screening and blocking lanes.",tg:["central defending","screening"],mt:["Interceptions","Opp. Central Zone Passes"]},
+{id:58,t:"Defending Against Long Balls",ph:"Defending",pa:null,d:"Aerial duels, second ball organization, preventing over-the-top balls.",tg:["aerial","long ball","second ball"],mt:["Aerial Duel Win %","Second Balls Won"]},
+{id:59,t:"Defensive Communication",ph:"Defending",pa:null,d:"Constant verbal and non-verbal communication across the unit.",tg:["communication","leadership"]},
+{id:60,t:"Defensive Discipline",ph:"Defending",pa:59,d:"Focus and effort for 90+ minutes — no mental lapses.",tg:["concentration","discipline"]},
+{id:61,t:"Recovering Defensive Shape",ph:"Defending",pa:null,d:"Rapidly reorganizing after attack breaks down.",tg:["recovery","shape"]},
+{id:62,t:"Shape vs. Different Formations",ph:"Defending",pa:null,d:"Adapting the block to counter different opponent formations.",tg:["formation","matchup"]},
+{id:63,t:"Counter-Attacking",ph:"Transition Att.",pa:null,d:"Attacking at speed after winning the ball with minimal passes.",tg:["counter","speed","fast break"],mt:["Counter-Attack Frequency","Goals from Counters","Seconds to Shot on Counter"]},
+{id:64,t:"Quick Vertical Passes on Turnover",ph:"Transition Att.",pa:63,d:"First pass forward immediately to exploit disorganization.",tg:["first pass","vertical"],mt:["Forward Pass % After Turnover"]},
+{id:65,t:"Progressive Ball Carrying",ph:"Transition Att.",pa:63,d:"Driving forward with the ball through disorganized lines.",tg:["dribbling","carrying"],mt:["Progressive Carries","Carry Distance (m)"]},
+{id:66,t:"Third-Man Runs on Transition",ph:"Transition Att.",pa:63,d:"Third player progresses quickly via lay-off combination.",tg:["third man","lay-off"]},
+{id:67,t:"Exploiting the Far Side",ph:"Transition Att.",pa:null,d:"Switching to the far side where the opponent over-committed.",tg:["switch","far side"]},
+{id:68,t:"Transition with Target Striker",ph:"Transition Att.",pa:null,d:"Long ball to a target man who holds up for support.",tg:["target man","hold-up"]},
+{id:69,t:"Organized Possession After Winning",ph:"Transition Att.",pa:null,d:"Choosing control over speed — securing and building.",tg:["possession","control"]},
+{id:70,t:"Sprinting in Transition",ph:"Transition Att.",pa:null,d:"Explosive sprinting to support attacks in transition.",tg:["sprinting","explosive"]},
+{id:71,t:"Counter-Pressing (Gegenpressing)",ph:"Transition Def.",pa:null,d:"Immediate pressing within 5 seconds to win the ball back.",tg:["gegenpressing","counter-press"],mt:["Ball Recoveries in 5 sec","Counter-Press Success %","Turnovers Won in Opp. Half"]},
+{id:72,t:"Ball-Near Counter-Press",ph:"Transition Def.",pa:71,d:"Players closest to the ball swarming to regain quickly.",tg:["ball-near","swarming"]},
+{id:73,t:"Ball-Far Recovery",ph:"Transition Def.",pa:71,d:"Players far from ball recovering centrally and goal-side.",tg:["recovery","goal-side"]},
+{id:74,t:"Tactical Fouling",ph:"Transition Def.",pa:null,d:"Strategic fouling to stop counters and recover shape.",tg:["cynical foul","game management"]},
+{id:75,t:"Immediate Retreat",ph:"Transition Def.",pa:null,d:"Dropping into an organized block — shape over ball recovery.",tg:["retreat","shape"]},
+{id:76,t:"Delaying the Counter",ph:"Transition Def.",pa:75,d:"Nearest player slowing the counter for teammates to recover.",tg:["delay","jockeying"]},
+{id:77,t:"Counter Protection from Set Pieces",ph:"Transition Def.",pa:null,d:"Defensive coverage during attacking set pieces.",tg:["set pieces","counter protection"]},
+{id:78,t:"Recovering Numerical Balance",ph:"Transition Def.",pa:null,d:"Getting enough players behind the ball after overcommitting.",tg:["recovery","numbers"]},
+{id:79,t:"Attacking Corners",ph:"Set Pieces",pa:null,d:"Structured corner routines with choreographed movement.",tg:["corners","routines"],mt:["Corners Won","Shots from Corners","Goals from Corners"]},
+{id:80,t:"Near-Post Corner Routines",ph:"Set Pieces",pa:79,d:"Corners targeting near post with flick-ons and headers.",tg:["near post","flick"]},
+{id:81,t:"Short Corner Routines",ph:"Set Pieces",pa:79,d:"Playing corners short to change angle or draw defenders.",tg:["short corner","creative"]},
+{id:82,t:"Attacking Free Kicks",ph:"Set Pieces",pa:null,d:"Direct and indirect free kick routines and set plays.",tg:["free kicks","routines"]},
+{id:83,t:"Throw-In Routines",ph:"Set Pieces",pa:null,d:"Structured throw-in patterns to retain possession.",tg:["throw-ins","restarts"]},
+{id:84,t:"Defending Corners",ph:"Set Pieces",pa:null,d:"Organized corner defense with zonal and man-marking.",tg:["corners","defensive"],mt:["Goals Conceded from Corners","Corner Clearance Rate"]},
+{id:85,t:"Zonal Corner Defense",ph:"Set Pieces",pa:84,d:"Defending corners zonally — areas, not individuals.",tg:["zonal","corners"]},
+{id:86,t:"Man-Marking Corner Defense",ph:"Set Pieces",pa:84,d:"Each defender assigned to a specific opponent at corners.",tg:["man-marking","tracking"]},
+{id:87,t:"Defending Free Kicks",ph:"Set Pieces",pa:84,d:"Wall setup and positioning for dangerous free kicks.",tg:["free kicks","wall"]},
+{id:88,t:"Defending Throw-Ins",ph:"Set Pieces",pa:null,d:"Preventing quick throws, marking receivers, long throw prep.",tg:["throw-ins","defensive"]},
+{id:89,t:"Penalty Kick Strategy",ph:"Set Pieces",pa:null,d:"Designated takers, practice routines, and mental preparation.",tg:["penalty","strategy"]},
+{id:90,t:"Defending Penalties",ph:"Set Pieces",pa:89,d:"GK preparation — opponent study, psychology, shot-stopping.",tg:["penalty","goalkeeper"]},
+{id:91,t:"Quick Restarts",ph:"Set Pieces",pa:null,d:"Taking restarts quickly to catch opponents in transition.",tg:["quick restart","tempo"]},
+{id:92,t:"Game State Management",ph:"Attacking",pa:null,d:"Adapting based on scoreline and time — push, hold, or see out.",tg:["game management","adaptation"]},
+{id:93,t:"In-Game Tactical Adjustments",ph:"Attacking",pa:92,d:"Changing formation or approach mid-match.",tg:["adaptation","flexibility"]},
+{id:94,t:"Clock Management",ph:"Attacking",pa:92,d:"Using restarts to manage time and control tempo.",tg:["game management","clock"]},
+{id:95,t:"Playing with 10 Men",ph:"Defending",pa:null,d:"Reorganizing after a red card — sacrificing a position, adapting.",tg:["red card","10 men"]},
+{id:96,t:"Playing Against 10 Men",ph:"Attacking",pa:null,d:"Exploiting numerical advantage through width and patience.",tg:["numerical advantage","patience"]},
+{id:97,t:"Team Pressing Identity",ph:"Defending",pa:null,d:"Clear pressing philosophy understood by every player.",tg:["identity","philosophy"]},
+{id:98,t:"Defensive Rest Defense",ph:"Defending",pa:null,d:"Keeping players in defensive positions during attacks for insurance.",tg:["rest defense","insurance"]},
+{id:99,t:"Defensive Transition from Set Pieces",ph:"Transition Def.",pa:null,d:"Organization after a failed set piece to prevent counter exposure.",tg:["set pieces","transition"]},
+{id:100,t:"Team Cohesion & Collective Understanding",ph:"Attacking",pa:null,d:"Every player understanding the game model and how all principles connect.",tg:["cohesion","game model","philosophy"]}
+];
+
+let allPrinciples = RAW.map(p=>({id:p.id,title:p.t,phase:p.ph,parent:p.pa,desc:p.d,tags:p.tg,metrics:p.mt||[],custom:false,ref:''}));
+const PHASES=["Attacking","Defending","Transition Att.","Transition Def.","Set Pieces"];
+const PC={"Attacking":"att","Defending":"def","Transition Att.":"tra","Transition Def.":"trd","Set Pieces":"sp"};
+const PREF={"Attacking":"A","Defending":"D","Transition Att.":"TA","Transition Def.":"TD","Set Pieces":"SP"};
+
+// ═══ REFERENCE CODES ═══
+function assignRefs(){
+  PHASES.forEach(ph=>{
+    const prefix=PREF[ph];
+    const inPhase=allPrinciples.filter(p=>p.phase===ph);
+    const parents=inPhase.filter(p=>!p.parent);
+    let parentNum=1;
+    parents.forEach(par=>{
+      const num=String(parentNum).padStart(2,'0');
+      par.ref=prefix+num;
+      const subs=inPhase.filter(p=>p.parent===par.id);
+      subs.forEach((sub,si)=>{sub.ref=prefix+num+String.fromCharCode(97+si)});
+      parentNum++;
+    });
+  });
+}
+assignRefs();
+let gameModel={};PHASES.forEach(p=>gameModel[p]=[]);
+let activeFilters=new Set(), expandedId=null, currentView='library';
+let modelName="My Game Model", editingName=false, showForm=false;
+let toastTimer=null;
+
+// ═══ HELPERS ═══
+function e(id){return document.getElementById(id)}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function hl(text,q){
+  if(!q)return esc(text);
+  const w=q.trim().split(/\s+/).filter(x=>x.length>1);
+  if(!w.length)return esc(text);
+  const re=new RegExp('('+w.map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
+  return esc(text).replace(re,'<mark>$1</mark>');
+}
+function score(p,q){
+  if(!q)return 1;const ql=q.toLowerCase(),w=ql.split(/\s+/).filter(x=>x.length>1);
+  if(!w.length)return 1;let s=0;
+  const tl=p.title.toLowerCase(),dl=p.desc.toLowerCase(),gl=p.tags.join(' ').toLowerCase(),ml=(p.metrics||[]).join(' ').toLowerCase(),rl=(p.ref||'').toLowerCase();
+  if(tl.includes(ql))s+=100;if(gl.includes(ql))s+=60;if(dl.includes(ql))s+=30;if(ml.includes(ql))s+=40;if(rl.includes(ql))s+=80;
+  w.forEach(x=>{if(tl.includes(x))s+=40;if(gl.includes(x))s+=25;if(dl.includes(x))s+=10;if(ml.includes(x))s+=20;if(rl.includes(x))s+=50});
+  return s;
+}
+function modelIds(){return new Set(Object.values(gameModel).flat().map(p=>p.id))}
+function modelCount(){return Object.values(gameModel).flat().length}
+function toast(msg){
+  const t=e('toast');t.textContent=msg;t.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+function updateBadge(){
+  const b=e('modelBadge'),c=modelCount();
+  b.textContent=c;b.classList.toggle('show',c>0);
+}
+
+// ═══ VIEW SWITCHING ═══
+function switchView(v){
+  currentView=v;
+  e('libraryView').style.display=v==='library'?'block':'none';
+  e('builderView').style.display=v==='builder'?'block':'none';
+  e('tabLibrary').classList.toggle('active',v==='library');
+  e('tabBuilder').classList.toggle('active',v==='builder');
+  if(v==='builder')renderBuilder();
+}
+
+// ═══ LIBRARY ═══
+function buildFilters(){
+  e('filtersRow').innerHTML=PHASES.map(ph=>`<button class="chip" data-ph="${ph}" onclick="toggleFilter('${ph}',this)">${ph}</button>`).join('')+
+    '<div class="spacer"></div>'+
+    '<button class="btn-add-custom" id="addFormBtn" onclick="toggleForm()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Your Own</button>';
+}
+function toggleFilter(ph,el){
+  if(activeFilters.has(ph)){activeFilters.delete(ph);el.classList.remove('active-'+PC[ph])}
+  else{activeFilters.add(ph);el.classList.add('active-'+PC[ph])}
+  renderResults();
+}
+function clearSearch(){e('searchInput').value='';e('clearBtn').classList.remove('show');renderResults()}
+function toggleForm(){
+  showForm=!showForm;
+  const btn=e('addFormBtn');
+  if(showForm){
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel';
+    btn.classList.add('active-cancel');
+  } else {
+    btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Your Own';
+    btn.classList.remove('active-cancel');
+  }
+  renderAddForm();
+}
+function renderAddForm(){
+  if(!showForm){e('addFormContainer').innerHTML='';return}
+  e('addFormContainer').innerHTML=`<div class="add-form show">
+    <div class="form-title">Create Custom Principle</div>
+    <label class="form-label">Title *</label>
+    <input class="form-input" id="newTitle" placeholder="e.g. False 9 Movement">
+    <label class="form-label">Phase</label>
+    <select class="form-select" id="newPhase">${PHASES.map(p=>`<option value="${p}">${p}</option>`).join('')}</select>
+    <label class="form-label">Description</label>
+    <textarea class="form-textarea" id="newDesc" placeholder="Describe the principle..."></textarea>
+    <label class="form-label">Tags (comma separated)</label>
+    <input class="form-input" id="newTags" placeholder="e.g. false 9, movement, creativity">
+    <button class="btn-primary" onclick="addCustom()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Principle</button>
+  </div>`;
+}
+function addCustom(){
+  const title=e('newTitle').value.trim();if(!title)return;
+  const p={id:Date.now(),title,phase:e('newPhase').value,parent:null,desc:e('newDesc').value.trim(),tags:e('newTags').value.split(',').map(t=>t.trim()).filter(Boolean),metrics:[],custom:true,ref:''};
+  allPrinciples.push(p);assignRefs();showForm=false;
+  const btn=e('addFormBtn');
+  btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Your Own';
+  btn.classList.remove('active-cancel');
+  renderAddForm();renderResults();toast('Created "'+title+'"');
+}
+function deleteCustom(id){
+  allPrinciples=allPrinciples.filter(p=>p.id!==id);
+  PHASES.forEach(ph=>{gameModel[ph]=gameModel[ph].filter(p=>p.id!==id)});
+  renderResults();updateBadge();toast('Principle deleted');
+}
+function addToModel(id){
+  const ids=modelIds();if(ids.has(id))return;
+  const p=allPrinciples.find(x=>x.id===id);if(!p)return;
+  gameModel[p.phase].push(p);updateBadge();renderResults();toast('Added "'+p.title+'" to '+p.phase);
+}
+function renderResults(){
+  const q=e('searchInput').value.trim();
+  e('clearBtn').classList.toggle('show',q.length>0);
+  let res=allPrinciples.map(p=>({...p,sc:score(p,q)})).filter(p=>p.sc>0);
+  if(activeFilters.size>0)res=res.filter(p=>activeFilters.has(p.phase));
+  res.sort((a,b)=>b.sc-a.sc);
+  const pc=res.filter(r=>!r.parent).length,sc=res.filter(r=>r.parent).length;
+  const ids=modelIds();
+  e('resultsInfo').textContent=(q||activeFilters.size>0)?res.length+' principle'+(res.length!==1?'s':'')+' found ('+pc+' main, '+sc+' sub)':'All '+res.length+' principles — '+pc+' main, '+sc+' sub-principles';
+  if(!res.length){e('resultsList').innerHTML='<div style="text-align:center;padding:50px 20px;color:var(--text3)"><p>No principles match your search. Try different keywords.</p></div>';return}
+  const byId={};allPrinciples.forEach(p=>byId[p.id]=p);
+  e('resultsList').innerHTML=res.map((p,i)=>{
+    const isSub=!!p.parent,cls=PC[p.phase],inModel=ids.has(p.id);
+    const parName=isSub&&byId[p.parent]?byId[p.parent].title:'';
+    const kids=allPrinciples.filter(c=>c.parent===p.id).length;
+    const isExp=expandedId===p.id;
+    return `<div class="card ${isSub?'is-sub':''} ${isExp?'expanded':''}" onclick="toggleCard(${p.id})" style="animation:cardIn 0.3s ease ${Math.min(i*0.02,0.5)}s both">
+      <div class="card-top">
+        <div style="flex:1">
+          <div class="card-title">
+            ${p.ref?'<span class="ref-badge">'+p.ref+'</span>':''}${isSub?'<span class="sub-badge">Sub</span>':''}${p.custom?'<span class="custom-badge">Custom</span>':''}${hl(p.title,q)}${!isSub&&kids?'<span class="parent-count">'+kids+' sub</span>':''}
+          </div>
+          <div class="card-desc">${hl(p.desc,q)}${isSub&&parName?' <span style="color:var(--text3);font-size:11px">— part of: '+esc(parName)+'</span>':''}</div>
+        </div>
+        <div class="card-right">
+          <span class="phase-badge ${cls}">${p.phase}</span>
+          <span class="chev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+        </div>
+      </div>
+      <div class="card-bottom">
+        ${p.tags.map(t=>'<span class="tag">'+hl(t,q)+'</span>').join('')}
+        <div class="spacer"></div>
+        <button class="btn-add ${inModel?'in-model':''}" onclick="event.stopPropagation();addToModel(${p.id})">
+          ${inModel?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> In Model':'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add to Model'}
+        </button>
+        ${p.custom?'<button class="btn-sm red" onclick="event.stopPropagation();deleteCustom('+p.id+')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>':''}
+      </div>
+      <div class="card-details">
+        ${p.ref?'<strong style="color:var(--text2)">Ref:</strong> '+p.ref+'<br>':''}
+        <strong style="color:var(--text2)">Phase:</strong> ${p.phase}<br>
+        <strong style="color:var(--text2)">Tags:</strong> ${p.tags.join(', ')}<br>
+        ${isSub&&parName?'<strong style="color:var(--text2)">Parent:</strong> '+esc(parName)+'<br>':''}
+        ${p.metrics&&p.metrics.length?'<div class="metrics-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Key Metrics to Track</div><div class="metrics-row">'+p.metrics.map(m=>'<span class="metric"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'+esc(m)+'</span>').join('')+'</div>':''}
+        ${p.custom?'<span style="color:var(--green)">✦ Custom principle</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleCard(id){expandedId=expandedId===id?null:id;renderResults()}
+
+// ═══ BUILDER ═══
+function renderBuilder(){
+  const mc=modelCount();
+  let html='<div class="builder-header"><div>';
+  if(editingName){
+    html+='<input class="model-name-input" id="nameInput" value="'+esc(modelName)+'" onblur="saveName()" onkeydown="if(event.key===\'Enter\')saveName()">';
+  } else {
+    html+='<span class="model-name" onclick="startEditName()">'+esc(modelName)+'<span class="model-name-hint">click to rename</span></span>';
+  }
+  html+='</div><div style="display:flex;gap:8px">';
+  html+='<button class="btn-ghost" onclick="switchView(\'library\')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Principles</button>';
+  if(mc>0)html+='<div class="export-btns"><button class="btn-export txt" onclick="exportModel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> .TXT</button><button class="btn-export img" onclick="exportImage()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Detail</button><button class="btn-export tac" onclick="exportTactical()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg> Overview</button></div>';
+  html+='</div></div>';
+
+  if(mc===0){
+    html+='<div class="empty-builder"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg><br><br><p style="font-size:15px;margin-bottom:12px">Your game model is empty</p><p>Go to the Library tab to search and add principles, or create your own custom principles to build your tactical framework.</p><br><button class="btn-primary" onclick="switchView(\'library\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg> Browse Library</button></div>';
+  } else {
+    PHASES.forEach(ph=>{
+      const cls=PC[ph],items=gameModel[ph];
+      html+='<div class="phase-section"><div class="phase-header '+cls+'"><div class="phase-dot" style="background:var(--'+cls+')"></div><span class="phase-name" style="color:var(--'+cls+')">'+ph+'</span><span class="phase-count" style="color:var(--'+cls+');background:rgba(var(--'+cls+'),0.15)">'+items.length+'</span></div>';
+      if(!items.length){
+        html+='<div class="empty-phase">No principles added — browse the library to add</div>';
+      } else {
+        items.forEach((p,idx)=>{
+          html+='<div class="model-card"><div class="move-btns"><button class="btn-sm" onclick="moveItem(\''+ph+'\','+idx+',-1)"'+(idx===0?' disabled':'')+'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg></button><button class="btn-sm" onclick="moveItem(\''+ph+'\','+idx+',1)"'+(idx===items.length-1?' disabled':'')+'><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>';
+          html+='<div class="model-card-body"><div class="model-card-title">'+(p.ref?'<span class="ref-badge">'+p.ref+'</span>':'')+esc(p.title)+(p.custom?' <span class="custom-badge">Custom</span>':'')+'</div><div class="model-card-desc">'+esc(p.desc)+'</div><div class="model-card-tags">'+p.tags.slice(0,4).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>'+(p.metrics&&p.metrics.length?'<div class="model-metrics">'+p.metrics.map(m=>'<span class="metric"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'+esc(m)+'</span>').join('')+'</div>':'')+'</div>';
+          html+='<button class="btn-sm red" onclick="removeItem(\''+ph+'\','+p.id+')" title="Remove"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>';
+        });
+      }
+      html+='</div>';
+    });
+    const activePhases=PHASES.filter(ph=>gameModel[ph].length>0).length;
+    html+='<div class="model-summary">'+mc+' principles across '+activePhases+' phase'+(activePhases!==1?'s':'')+'</div>';
+  }
+  e('builderView').innerHTML=html;
+  if(editingName){const inp=e('nameInput');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length)}}
+}
+function startEditName(){editingName=true;renderBuilder()}
+function saveName(){const inp=e('nameInput');if(inp&&inp.value.trim())modelName=inp.value.trim();editingName=false;renderBuilder()}
+function moveItem(ph,idx,dir){
+  const arr=gameModel[ph],ni=idx+dir;
+  if(ni<0||ni>=arr.length)return;
+  [arr[idx],arr[ni]]=[arr[ni],arr[idx]];
+  renderBuilder();
+}
+function removeItem(ph,id){
+  gameModel[ph]=gameModel[ph].filter(p=>p.id!==id);
+  updateBadge();renderBuilder();
+}
+function exportModel(){
+  let text=modelName+'\n'+'='.repeat(50)+'\n\n';
+  PHASES.forEach(ph=>{
+    const items=gameModel[ph];if(!items.length)return;
+    text+='| '+ph.toUpperCase()+'\n'+'-'.repeat(40)+'\n';
+    items.forEach((p,i)=>{text+='  '+(i+1)+'. '+(p.ref?'['+p.ref+'] ':'')+p.title+'\n     '+p.desc+'\n     Tags: '+p.tags.join(', ')+(p.metrics&&p.metrics.length?'\n     Metrics: '+p.metrics.join(', '):'')+'\n\n'});
+  });
+  text+='\nTotal Principles: '+modelCount()+'\nGenerated by Game Model Architect';
+  const blob=new Blob([text],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=modelName.replace(/\s+/g,'-').toLowerCase()+'.txt';a.click();
+  URL.revokeObjectURL(url);toast('Game model exported!');
+}
+
+function exportImage(){
+  const mc=modelCount();if(!mc)return;
+  const phColors={"Attacking":"#f59e0b","Defending":"#ef4444","Transition Att.":"#3b82f6","Transition Def.":"#a855f7","Set Pieces":"#ec4899"};
+  const W=1200,PAD=50,HDRH=120;
+  // Calculate height
+  let totalItems=0;
+  const activePh=PHASES.filter(ph=>gameModel[ph].length>0);
+  activePh.forEach(ph=>{totalItems+=gameModel[ph].length});
+  const H=HDRH+activePh.length*60+totalItems*44+PAD*2+60;
+  const c=document.createElement('canvas');c.width=W*2;c.height=H*2;
+  const ctx=c.getContext('2d');ctx.scale(2,2);
+  // Background
+  ctx.fillStyle='#0a0f0d';ctx.fillRect(0,0,W,H);
+  // Subtle lines
+  ctx.strokeStyle='rgba(52,211,153,0.04)';ctx.lineWidth=1;
+  for(let y=0;y<H;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+  // Header
+  ctx.fillStyle='#34d399';ctx.font='bold 36px Bebas Neue, sans-serif';ctx.letterSpacing='3px';
+  ctx.textAlign='center';
+  ctx.fillText(modelName.toUpperCase(),W/2,PAD+40);
+  ctx.fillStyle='#8fa89b';ctx.font='500 14px DM Sans, sans-serif';
+  ctx.fillText(mc+' Principles | '+activePh.length+' Phases | Game Model Architect',W/2,PAD+65);
+  // Divider
+  const grd=ctx.createLinearGradient(PAD,0,W-PAD,0);
+  grd.addColorStop(0,'transparent');grd.addColorStop(0.3,'#2d6b4f');grd.addColorStop(0.7,'#2d6b4f');grd.addColorStop(1,'transparent');
+  ctx.strokeStyle=grd;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(PAD,PAD+80);ctx.lineTo(W-PAD,PAD+80);ctx.stroke();
+  let curY=HDRH+PAD;
+  activePh.forEach(ph=>{
+    const items=gameModel[ph],col=phColors[ph];
+    // Phase header
+    ctx.fillStyle=col+'20';
+    ctx.beginPath();
+    const rx=PAD,ry=curY,rw=W-PAD*2,rh=40,rr=8;
+    ctx.moveTo(rx+rr,ry);ctx.lineTo(rx+rw-rr,ry);ctx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+rr);ctx.lineTo(rx+rw,ry+rh-rr);ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-rr,ry+rh);ctx.lineTo(rx+rr,ry+rh);ctx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-rr);ctx.lineTo(rx,ry+rr);ctx.quadraticCurveTo(rx,ry,rx+rr,ry);ctx.fill();
+    ctx.strokeStyle=col+'40';ctx.lineWidth=1;ctx.stroke();
+    // Phase dot
+    ctx.fillStyle=col;ctx.fillRect(PAD+12,curY+14,12,12);
+    // Phase name
+    ctx.fillStyle=col;ctx.font='bold 20px Bebas Neue, sans-serif';ctx.textAlign='left';
+    ctx.fillText(ph.toUpperCase(),PAD+32,curY+28);
+    // Count
+    ctx.fillStyle=col;ctx.font='bold 12px DM Sans, sans-serif';
+    ctx.fillText(items.length+' principle'+(items.length!==1?'s':''),PAD+32+ctx.measureText(ph.toUpperCase()).width+12,curY+27);
+    curY+=50;
+    items.forEach((p,idx)=>{
+      // Item row
+      ctx.fillStyle=idx%2===0?'#111916':'#0f1613';
+      ctx.fillRect(PAD+8,curY,W-PAD*2-16,38);
+      // Number
+      ctx.fillStyle='#4a6358';ctx.font='bold 11px DM Sans, sans-serif';ctx.textAlign='right';
+      ctx.fillText((p.ref||''+(idx+1)+'.')+'',PAD+32,curY+24);
+      // Title
+      ctx.fillStyle='#e8f0ec';ctx.font='600 13px DM Sans, sans-serif';ctx.textAlign='left';
+      ctx.fillText(p.title,PAD+42,curY+16);
+      // Desc (truncated)
+      ctx.fillStyle='#8fa89b';ctx.font='400 11px DM Sans, sans-serif';
+      let desc=p.desc;if(desc.length>90)desc=desc.substring(0,87)+'...';
+      ctx.fillText(desc,PAD+42,curY+32);
+      // Tags + Metrics
+      const tagX=W-PAD-12;
+      ctx.textAlign='right';ctx.fillStyle='#34d399';ctx.font='500 9px DM Sans, sans-serif';
+      const tagStr=p.tags.slice(0,3).join(' | ');
+      const metStr=p.metrics&&p.metrics.length?p.metrics.slice(0,2).join(' | '):'';
+      ctx.fillText(tagStr,tagX,curY+16);
+      if(metStr){ctx.fillStyle='#60a5fa';ctx.fillText('📊 '+metStr,tagX,curY+28)}
+      ctx.textAlign='left';
+      curY+=40;
+    });
+    curY+=12;
+  });
+  // Footer
+  curY+=10;
+  ctx.fillStyle='#4a6358';ctx.font='400 11px DM Sans, sans-serif';ctx.textAlign='center';
+  ctx.fillText('Generated by Game Model Architect | gamemodel.architect',W/2,curY);
+  // Download
+  c.toBlob(function(blob){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=modelName.replace(/\s+/g,'-').toLowerCase()+'-game-model.png';a.click();
+    URL.revokeObjectURL(url);
+    toast('Game model image exported!');
+  },'image/png');
+}
+
+// ═══ TACTICAL OVERVIEW EXPORT ═══
+function exportTactical(){
+  const mc=modelCount();if(!mc)return;
+  const phColors={"Attacking":"#f59e0b","Defending":"#ef4444","Transition Att.":"#3b82f6","Transition Def.":"#a855f7","Set Pieces":"#ec4899"};
+  const phLabels={"Attacking":"ATTACKING","Defending":"DEFENDING","Transition Att.":"ATTACKING TRANSITION","Transition Def.":"DEFENSIVE TRANSITION","Set Pieces":"SET PIECES"};
+  const phPrefixes={"Attacking":"A","Defending":"D","Transition Att.":"TA","Transition Def.":"TD","Set Pieces":"SP"};
+
+  const W=1600,H=900,PAD=50,S=2;
+  const c=document.createElement('canvas');c.width=W*S;c.height=H*S;
+  const ctx=c.getContext('2d');ctx.scale(S,S);
+
+  // ─── Background ───
+  ctx.fillStyle='#060a08';ctx.fillRect(0,0,W,H);
+  // Subtle pitch-line grid
+  ctx.strokeStyle='rgba(52,211,153,0.03)';ctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+  for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+
+  // ─── Title Block (left side) ───
+  const titleX=PAD,titleY=PAD;
+  ctx.fillStyle='#34d399';ctx.font='bold 42px Bebas Neue, sans-serif';ctx.textAlign='left';
+  ctx.fillText(modelName.toUpperCase(),titleX,titleY+42);
+  ctx.fillStyle='#4a6358';ctx.font='500 13px DM Sans, sans-serif';
+  ctx.fillText('GAME MODEL  |  '+mc+' PRINCIPLES  |  '+PHASES.filter(ph=>gameModel[ph].length).length+' PHASES',titleX,titleY+62);
+  // Divider under title
+  ctx.strokeStyle='rgba(52,211,153,0.2)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(titleX,titleY+76);ctx.lineTo(titleX+380,titleY+76);ctx.stroke();
+
+  // ─── Layout zones ───
+  // Attacking row: top, spanning right area
+  // Transitions: middle band
+  // Defending row: bottom
+  // Set Pieces: small boxes at far edges
+
+  const contentX=PAD;
+  const colW=(W-PAD*2)/3;
+  const attY=130, transY=410, defY=560;
+
+  // Helper: draw a phase card
+  function drawCard(x,y,w,h,label,color,items,prefix){
+    // Card background
+    ctx.fillStyle='rgba(13,19,16,0.9)';
+    const r=10;
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();
+    // Border
+    ctx.strokeStyle=color+'50';ctx.lineWidth=1.5;ctx.stroke();
+    // Top accent line
+    ctx.fillStyle=color;ctx.fillRect(x,y,w,3);
+
+    // Label
+    ctx.fillStyle=color;ctx.font='bold 15px Bebas Neue, sans-serif';ctx.textAlign='left';
+    ctx.fillText(label,x+14,y+22);
+
+    // Principle items
+    let iy=y+36;
+    const parents=items.filter(p=>!p.parent||!items.find(q=>q.id===p.parent));
+    const subs=items.filter(p=>p.parent&&items.find(q=>q.id===p.parent));
+
+    parents.forEach(p=>{
+      // Ref code
+      if(p.ref){
+        ctx.fillStyle=color+'90';ctx.font='bold 10px DM Sans, sans-serif';
+        ctx.fillText(p.ref,x+14,iy+2);
+      }
+      // Title
+      ctx.fillStyle='#e8f0ec';ctx.font='600 12px DM Sans, sans-serif';
+      ctx.fillText(p.title,x+14+(p.ref?34:0),iy+2);
+      iy+=18;
+
+      // Sub-principles under this parent
+      const children=subs.filter(s=>s.parent===p.id);
+      children.forEach(s=>{
+        ctx.fillStyle='#4a6358';ctx.font='400 10px DM Sans, sans-serif';
+        ctx.fillText('›',x+22,iy+1);
+        if(s.ref){
+          ctx.fillStyle=color+'60';ctx.font='bold 9px DM Sans, sans-serif';
+          ctx.fillText(s.ref,x+32,iy+1);
+        }
+        ctx.fillStyle='#8fa89b';ctx.font='400 11px DM Sans, sans-serif';
+        ctx.fillText(s.title,x+32+(s.ref?32:0),iy+1);
+        iy+=16;
+      });
+      iy+=4;
+    });
+    return iy;
+  }
+
+  // ─── ATTACKING SECTION ───
+  const attItems=gameModel['Attacking'];
+  if(attItems.length){
+    // Section label
+    ctx.fillStyle='#f59e0b40';ctx.font='bold 18px Bebas Neue, sans-serif';ctx.textAlign='center';
+    ctx.fillText('ATTACKING (A)',W/2,attY-8);
+    ctx.strokeStyle='#f59e0b20';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(contentX,attY);ctx.lineTo(W-PAD,attY);ctx.stroke();
+
+    // Split attacking into columns based on parent count
+    const attParents=attItems.filter(p=>!p.parent||!attItems.find(q=>q.id===p.parent));
+    const perCol=Math.ceil(attParents.length/3);
+    for(let col=0;col<3;col++){
+      const startIdx=col*perCol;
+      const colParents=attParents.slice(startIdx,startIdx+perCol);
+      if(!colParents.length)continue;
+      const colItems=[];
+      colParents.forEach(p=>{
+        colItems.push(p);
+        attItems.filter(s=>s.parent===p.id).forEach(s=>colItems.push(s));
+      });
+      const cx=contentX+col*(colW+8);
+      const cardH=Math.max(colItems.length*16+40,80);
+      const lbl=col===0?'BUILD-UP & POSSESSION':col===1?'PROGRESSION & WIDTH':'CREATION & FINISHING';
+      drawCard(cx,attY+8,colW-16,Math.min(cardH,250),lbl,'#f59e0b',colItems,'A');
+    }
+  }
+
+  // ─── TRANSITION SECTION (middle band) ───
+  // Transition Attack on left, Transition Defense on right with connecting arrows
+  ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(contentX,transY-12);ctx.lineTo(W-PAD,transY-12);ctx.stroke();
+
+  // Center graphic: transition arrows
+  const midX=W/2,midY=transY+60;
+  ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;
+  // Horizontal arrow left→right
+  ctx.beginPath();ctx.moveTo(midX-120,midY);ctx.lineTo(midX+120,midY);ctx.stroke();
+  // Arrowheads
+  ctx.fillStyle='#3b82f680';ctx.beginPath();ctx.moveTo(midX-120,midY);ctx.lineTo(midX-110,midY-5);ctx.lineTo(midX-110,midY+5);ctx.fill();
+  ctx.fillStyle='#a855f780';ctx.beginPath();ctx.moveTo(midX+120,midY);ctx.lineTo(midX+110,midY-5);ctx.lineTo(midX+110,midY+5);ctx.fill();
+  // Vertical arrow
+  ctx.strokeStyle='rgba(255,255,255,0.1)';
+  ctx.beginPath();ctx.moveTo(midX,midY-30);ctx.lineTo(midX,midY+30);ctx.stroke();
+  // Center dot
+  ctx.fillStyle='#1a2620';ctx.beginPath();ctx.arc(midX,midY,6,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1.5;ctx.stroke();
+
+  // Labels
+  ctx.fillStyle='#3b82f690';ctx.font='bold 10px DM Sans, sans-serif';ctx.textAlign='center';
+  ctx.fillText('BALL WON',midX-80,midY-10);
+  ctx.fillStyle='#a855f790';
+  ctx.fillText('BALL LOST',midX+80,midY-10);
+
+  const taItems=gameModel['Transition Att.'];
+  const tdItems=gameModel['Transition Def.'];
+  if(taItems.length){
+    drawCard(contentX,transY,W/2-PAD-80,Math.max(taItems.length*16+40,80),'ATTACKING TRANSITION (TA)','#3b82f6',taItems,'TA');
+  }
+  if(tdItems.length){
+    drawCard(W/2+80,transY,W/2-PAD-80,Math.max(tdItems.length*16+40,80),'DEFENSIVE TRANSITION (TD)','#a855f7',tdItems,'TD');
+  }
+
+  // ─── DEFENDING SECTION ───
+  const defItems=gameModel['Defending'];
+  if(defItems.length){
+    ctx.strokeStyle='#ef444420';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(contentX,defY);ctx.lineTo(W-PAD,defY);ctx.stroke();
+    ctx.fillStyle='#ef444440';ctx.font='bold 18px Bebas Neue, sans-serif';ctx.textAlign='center';
+    ctx.fillText('DEFENDING (D)',W/2,defY-8);
+
+    const defParents=defItems.filter(p=>!p.parent||!defItems.find(q=>q.id===p.parent));
+    const perCol=Math.ceil(defParents.length/3);
+    for(let col=0;col<3;col++){
+      const startIdx=col*perCol;
+      const colParents=defParents.slice(startIdx,startIdx+perCol);
+      if(!colParents.length)continue;
+      const colItems=[];
+      colParents.forEach(p=>{
+        colItems.push(p);
+        defItems.filter(s=>s.parent===p.id).forEach(s=>colItems.push(s));
+      });
+      const cx=contentX+col*(colW+8);
+      const cardH=Math.max(colItems.length*16+40,80);
+      const lbl=col===0?'PRESSING & PRESSURE':col===1?'BLOCK & SHAPE':'RECOVERY & DISCIPLINE';
+      drawCard(cx,defY+8,colW-16,Math.min(cardH,250),lbl,'#ef4444',colItems,'D');
+    }
+  }
+
+  // ─── SET PIECES ───
+  const spItems=gameModel['Set Pieces'];
+  if(spItems.length){
+    const spAtt=spItems.filter(p=>/attack|corner routine|free kick(?!.*defen)|throw-in routine|quick restart|penalty kick/i.test(p.title));
+    const spDef=spItems.filter(p=>!spAtt.includes(p));
+    // Attacking set pieces: top right
+    if(spAtt.length){
+      drawCard(W-PAD-220,attY-48,210,Math.max(spAtt.length*16+40,50),'ATT. SET PIECES','#ec4899',spAtt,'SP');
+    }
+    // Defending set pieces: bottom right
+    if(spDef.length){
+      drawCard(W-PAD-220,defY+8,210,Math.max(spDef.length*16+40,50),'DEF. SET PIECES','#ec4899',spDef,'SP');
+    }
+    // If not split nicely, put all in one block at bottom center
+    if(!spAtt.length&&!spDef.length){
+      drawCard(W/2-150,H-120,300,Math.max(spItems.length*16+40,60),'SET PIECES (SP)','#ec4899',spItems,'SP');
+    }
+  }
+
+  // ─── Logo & Footer ───
+  ctx.fillStyle='#4a6358';ctx.font='400 10px DM Sans, sans-serif';ctx.textAlign='right';
+  ctx.fillText('Game Model Architect',W-PAD,H-PAD+10);
+  // Logo mark (simplified hexagon)
+  const lx=W-PAD-140,ly=H-PAD+2;
+  ctx.strokeStyle='#34d39950';ctx.lineWidth=1;
+  ctx.beginPath();
+  const ls=8;
+  ctx.moveTo(lx,ly-ls);ctx.lineTo(lx+ls*0.87,ly-ls/2);ctx.lineTo(lx+ls*0.87,ly+ls/2);ctx.lineTo(lx,ly+ls);ctx.lineTo(lx-ls*0.87,ly+ls/2);ctx.lineTo(lx-ls*0.87,ly-ls/2);ctx.closePath();ctx.stroke();
+
+  // Download
+  c.toBlob(function(blob){
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=modelName.replace(/\s+/g,'-').toLowerCase()+'-tactical-overview.png';a.click();
+    URL.revokeObjectURL(url);
+    toast('Tactical overview exported!');
+  },'image/png');
+}
+
+// ═══ INIT ═══
+// User profile bar
+(function(){
+  try {
+    const user = JSON.parse(localStorage.getItem('gma_user'));
+    if (user) {
+      const initials = user.name.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+      e('userBar').innerHTML = '<div style="display:inline-flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 14px 6px 8px"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#34d399,#1a7a52);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#0a0f0d">'+initials+'</div><span style="font-size:12px;font-weight:600;color:#e8f0ec">'+esc(user.name)+'</span><span style="font-size:10px;color:#4a6358">'+esc(user.level)+'</span><a href="index.html" style="font-size:11px;color:#8fa89b;text-decoration:none;margin-left:6px;padding:2px 8px;border-left:1px solid #1e2e28">← Home</a></div>';
+    }
+  } catch(ex) {}
+})();
+e('searchInput').addEventListener('input',renderResults);
+buildFilters();renderResults();updateBadge();
+</script>
+</body>
+</html>
