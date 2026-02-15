@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Model Architect — Coming Soon</title>
+<meta name="description" content="The tactical framework builder for soccer coaches. Define your playing identity. Coming soon.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050907;--green:#34d399;--green2:#1a7a52;--dim:#0d1310;--border:#152019;--text:#e2ede7;--text2:#6b8a7a;--text3:#364d42}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;overflow-x:hidden;min-height:100vh}
+::selection{background:var(--green);color:var(--bg)}
+
+/* ═══ ANIMATED PITCH BACKGROUND ═══ */
+.pitch-bg{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
+.pitch-line{position:absolute;background:rgba(52,211,153,0.025);border-radius:2px}
+.pitch-line.h{height:1px;width:100%;animation:sweepH 12s ease-in-out infinite}
+.pitch-line.v{width:1px;height:100%;animation:sweepV 14s ease-in-out infinite}
+.pitch-line:nth-child(1){top:25%;animation-delay:0s}
+.pitch-line:nth-child(2){top:50%;animation-delay:2s}
+.pitch-line:nth-child(3){top:75%;animation-delay:4s}
+.pitch-line:nth-child(4){left:33%;animation-delay:1s}
+.pitch-line:nth-child(5){left:66%;animation-delay:3s}
+.pitch-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:280px;height:280px;border:1px solid rgba(52,211,153,0.03);border-radius:50%;animation:pulseCircle 8s ease-in-out infinite}
+.pitch-circle:nth-child(7){width:140px;height:140px;animation-delay:2s}
+.pitch-dot{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(52,211,153,0.08);animation:driftDot 20s ease-in-out infinite}
+@keyframes sweepH{0%,100%{opacity:0.3;transform:scaleX(0.6)}50%{opacity:1;transform:scaleX(1)}}
+@keyframes sweepV{0%,100%{opacity:0.3;transform:scaleY(0.6)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes pulseCircle{0%,100%{opacity:0.3;transform:translate(-50%,-50%) scale(0.9)}50%{opacity:0.7;transform:translate(-50%,-50%) scale(1.05)}}
+@keyframes driftDot{0%{transform:translate(0,0)}25%{transform:translate(15px,-20px)}50%{transform:translate(-10px,15px)}75%{transform:translate(20px,10px)}100%{transform:translate(0,0)}}
+
+/* ═══ MAIN CONTENT ═══ */
+.page{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px}
+
+/* Logo */
+.logo-mark{margin-bottom:32px;animation:fadeUp 1s ease-out 0.2s both}
+.logo-mark svg{filter:drop-shadow(0 0 30px rgba(52,211,153,0.15))}
+
+/* Headline */
+.headline{text-align:center;margin-bottom:40px;animation:fadeUp 1s ease-out 0.4s both}
+.headline h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,10vw,96px);line-height:0.9;letter-spacing:4px;color:var(--text)}
+.headline h1 .accent{color:var(--green);position:relative}
+.headline h1 .accent::after{content:'';position:absolute;bottom:-2px;left:0;width:100%;height:3px;background:var(--green);border-radius:2px;animation:expandLine 1.5s ease-out 1.2s both}
+@keyframes expandLine{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* Tagline */
+.tagline{text-align:center;max-width:520px;margin-bottom:48px;animation:fadeUp 1s ease-out 0.6s both}
+.tagline p{font-size:clamp(15px,2vw,18px);color:var(--text2);line-height:1.7;font-weight:400}
+.tagline .highlight{color:var(--green);font-weight:700}
+
+/* Teaser pills */
+.teasers{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:52px;animation:fadeUp 1s ease-out 0.8s both}
+.teaser{padding:8px 18px;border-radius:100px;font-size:12px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;border:1px solid;animation:shimmer 4s ease-in-out infinite}
+.teaser:nth-child(1){color:#f59e0b;border-color:#f59e0b30;background:#f59e0b08;animation-delay:0s}
+.teaser:nth-child(2){color:#ef4444;border-color:#ef444430;background:#ef444408;animation-delay:0.5s}
+.teaser:nth-child(3){color:#3b82f6;border-color:#3b82f630;background:#3b82f608;animation-delay:1s}
+.teaser:nth-child(4){color:#a855f7;border-color:#a855f730;background:#a855f708;animation-delay:1.5s}
+.teaser:nth-child(5){color:#ec4899;border-color:#ec489930;background:#ec489908;animation-delay:2s}
+@keyframes shimmer{0%,100%{opacity:0.7}50%{opacity:1}}
+
+/* Email form */
+.email-block{text-align:center;width:100%;max-width:480px;animation:fadeUp 1s ease-out 1s both}
+.email-block label{display:block;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:14px}
+.form-row{display:flex;gap:0;border-radius:14px;overflow:hidden;border:1.5px solid var(--border);background:var(--dim);transition:border-color 0.3s}
+.form-row:focus-within{border-color:var(--green2)}
+.form-row input{flex:1;padding:16px 20px;font-size:15px;font-family:inherit;background:transparent;border:none;color:var(--text);outline:none;min-width:0}
+.form-row input::placeholder{color:var(--text3)}
+.form-row button{padding:16px 28px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;background:linear-gradient(135deg,var(--green),var(--green2));color:var(--bg);border:none;cursor:pointer;transition:all 0.3s;white-space:nowrap;font-weight:400}
+.form-row button:hover{background:linear-gradient(135deg,#5de8b9,var(--green));box-shadow:0 4px 24px rgba(52,211,153,0.3)}
+.form-note{font-size:11px;color:var(--text3);margin-top:10px}
+/* Success state */
+.success-msg{display:none;padding:20px;border-radius:14px;border:1.5px solid var(--green2);background:rgba(52,211,153,0.04);text-align:center}
+.success-msg .check{width:48px;height:48px;border-radius:50%;background:rgba(52,211,153,0.1);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px}
+.success-msg .check svg{color:var(--green)}
+.success-msg h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--green);margin-bottom:6px}
+.success-msg p{font-size:13px;color:var(--text2)}
+/* Loading & error */
+.form-loading{display:flex;align-items:center;justify-content:center;gap:12px;padding:18px;color:var(--text2);font-size:13px}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{padding:12px 16px;border-radius:10px;border:1px solid #ef444440;background:rgba(239,68,68,0.06);color:#f87171;font-size:13px;text-align:center;margin-top:10px}
+
+/* Countdown/preview hints */
+.hints{display:flex;gap:24px;margin-top:56px;flex-wrap:wrap;justify-content:center;animation:fadeUp 1s ease-out 1.2s both}
+.hint{text-align:center}
+.hint-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--text);letter-spacing:1px;line-height:1}
+.hint-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px}
+.hint-divider{width:1px;height:40px;background:var(--border);align-self:center}
+
+/* Footer */
+.footer{position:relative;z-index:1;text-align:center;padding:40px 24px;color:var(--text3);font-size:11px;letter-spacing:0.5px}
+.footer a{color:var(--text2);text-decoration:none;transition:color 0.2s}
+.footer a:hover{color:var(--green)}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* Floating formation dots - decorative */
+.formation{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:0.08}
+.f-dot{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--green);animation:driftDot 25s ease-in-out infinite}
+.f-dot:nth-child(1){top:-180px;left:0}
+.f-dot:nth-child(2){top:-100px;left:-100px;animation-delay:2s}
+.f-dot:nth-child(3){top:-100px;left:100px;animation-delay:4s}
+.f-dot:nth-child(4){top:0;left:-60px;animation-delay:1s}
+.f-dot:nth-child(5){top:0;left:0;width:8px;height:8px}
+.f-dot:nth-child(6){top:0;left:60px;animation-delay:3s}
+.f-dot:nth-child(7){top:100px;left:-120px;animation-delay:5s}
+.f-dot:nth-child(8){top:100px;left:0;animation-delay:2.5s}
+.f-dot:nth-child(9){top:100px;left:120px;animation-delay:1.5s}
+.f-dot:nth-child(10){top:180px;left:0;animation-delay:4.5s}
+.f-line{position:absolute;height:1px;background:var(--green);opacity:0.3;transform-origin:left center}
+.f-line:nth-child(11){top:-180px;left:3px;width:110px;transform:rotate(140deg)}
+.f-line:nth-child(12){top:-180px;left:3px;width:110px;transform:rotate(40deg)}
+.f-line:nth-child(13){top:-100px;left:-97px;width:70px;transform:rotate(70deg)}
+.f-line:nth-child(14){top:-100px;left:103px;width:70px;transform:rotate(110deg)}
+
+@media(max-width:520px){
+  .form-row{flex-direction:column}
+  .form-row button{padding:14px}
+  .hints{gap:16px}
+  .teasers{gap:6px}
+  .teaser{padding:6px 12px;font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- Animated pitch background -->
+<div class="pitch-bg">
+  <div class="pitch-line h"></div>
+  <div class="pitch-line h"></div>
+  <div class="pitch-line h"></div>
+  <div class="pitch-line v"></div>
+  <div class="pitch-line v"></div>
+  <div class="pitch-circle"></div>
+  <div class="pitch-circle"></div>
+  <div class="pitch-dot" style="top:20%;left:15%"></div>
+  <div class="pitch-dot" style="top:30%;left:75%;animation-delay:3s"></div>
+  <div class="pitch-dot" style="top:60%;left:25%;animation-delay:7s"></div>
+  <div class="pitch-dot" style="top:70%;left:80%;animation-delay:5s"></div>
+  <div class="pitch-dot" style="top:85%;left:45%;animation-delay:9s"></div>
+</div>
+
+<!-- Floating formation -->
+<div class="formation">
+  <div class="f-dot"></div><div class="f-dot"></div><div class="f-dot"></div>
+  <div class="f-dot"></div><div class="f-dot"></div><div class="f-dot"></div>
+  <div class="f-dot"></div><div class="f-dot"></div><div class="f-dot"></div>
+  <div class="f-dot"></div>
+  <div class="f-line"></div><div class="f-line"></div><div class="f-line"></div><div class="f-line"></div>
+</div>
+
+<div class="page">
+
+  <!-- Logo Mark -->
+  <div class="logo-mark">
+    <svg width="72" height="72" viewBox="0 0 64 64" fill="none" style="color:#34d399">
+      <path d="M32 4L58 20V44L32 60L6 44V20L32 4Z" stroke="currentColor" stroke-width="2.5" fill="none"/>
+      <circle cx="32" cy="14" r="2.5" fill="currentColor"/>
+      <circle cx="18" cy="24" r="2.5" fill="currentColor"/>
+      <circle cx="46" cy="24" r="2.5" fill="currentColor"/>
+      <circle cx="22" cy="40" r="2.5" fill="currentColor"/>
+      <circle cx="42" cy="40" r="2.5" fill="currentColor"/>
+      <circle cx="32" cy="50" r="2.5" fill="currentColor"/>
+      <line x1="32" y1="14" x2="18" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+      <line x1="32" y1="14" x2="46" y2="24" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+      <line x1="18" y1="24" x2="22" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+      <line x1="46" y1="24" x2="42" y2="40" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+      <line x1="22" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+      <line x1="42" y1="40" x2="32" y2="50" stroke="currentColor" stroke-width="1.2" opacity="0.5"/>
+    </svg>
+  </div>
+
+  <!-- Headline -->
+  <div class="headline">
+    <h1>GAME MODEL<br><span class="accent">ARCHITECT</span></h1>
+  </div>
+
+  <!-- Tagline — curiosity-driven -->
+  <div class="tagline">
+    <p>Most coaches have a formation.<br>The best coaches have a <span class="highlight">game model</span>.</p>
+    <p style="margin-top:14px;font-size:14px;color:var(--text3)">We're building the platform that turns your tactical ideas into a structured, measurable, shareable playing identity. Something is coming.</p>
+  </div>
+
+  <!-- Phase teaser pills -->
+  <div class="teasers">
+    <span class="teaser">Attacking</span>
+    <span class="teaser">Defending</span>
+    <span class="teaser">Transitions</span>
+    <span class="teaser">Metrics</span>
+    <span class="teaser">Set Pieces</span>
+  </div>
+
+  <!-- Email signup — Mailchimp integrated -->
+  <div class="email-block">
+    <label>Get early access</label>
+    <div class="form-row" id="formRow">
+      <input type="email" id="emailInput" placeholder="coach@yourclub.com" autocomplete="email" name="EMAIL">
+      <button onclick="submitEmail()" id="submitBtn">NOTIFY ME</button>
+    </div>
+    <div class="form-loading" id="formLoading" style="display:none">
+      <div class="spinner"></div>
+      <span>Adding you to the list...</span>
+    </div>
+    <div class="success-msg" id="successMsg">
+      <div class="check"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h3>YOU'RE ON THE LIST</h3>
+      <p>We'll notify you the moment Game Model Architect launches. Keep coaching.</p>
+    </div>
+    <div class="error-msg" id="errorMsg" style="display:none"></div>
+    <p class="form-note" id="formNote">No spam. Just one email when we launch.</p>
+  </div>
+
+  <!-- Stats/hints -->
+  <div class="hints">
+    <div class="hint">
+      <div class="hint-num">100+</div>
+      <div class="hint-label">Principles</div>
+    </div>
+    <div class="hint-divider"></div>
+    <div class="hint">
+      <div class="hint-num">40+</div>
+      <div class="hint-label">Trackable KPIs</div>
+    </div>
+    <div class="hint-divider"></div>
+    <div class="hint">
+      <div class="hint-num">5</div>
+      <div class="hint-label">Phases of Play</div>
+    </div>
+    <div class="hint-divider"></div>
+    <div class="hint">
+      <div class="hint-num">FREE</div>
+      <div class="hint-label">To Start</div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  Game Model Architect &copy; 2026 &middot; Built by coaches, for coaches
+</footer>
+
+<script>
+// ═══ MAILCHIMP CONFIGURATION ═══
+const MC_SERVER = 'us12';
+const MC_U = '3f5dfb5e5fd209d1d43f7278f';
+const MC_ID = '010ada936e';
+const MC_BOT = 'b_3f5dfb5e5fd209d1d43f7278f_010ada936e';
+
+// Mailchimp embedded form URL (JSONP — safe for client-side, no API key exposed)
+function getMcUrl(email) {
+  return `https://gumroad.${MC_SERVER}.list-manage.com/subscribe/post-json?u=${MC_U}&id=${MC_ID}&EMAIL=${encodeURIComponent(email)}&${MC_BOT}=&c=mcCallback`;
+}
+
+// JSONP callback — Mailchimp returns this
+window.mcCallback = function(resp) {
+  const formRow = document.getElementById('formRow');
+  const loading = document.getElementById('formLoading');
+  const success = document.getElementById('successMsg');
+  const error = document.getElementById('errorMsg');
+  const note = document.getElementById('formNote');
+
+  loading.style.display = 'none';
+
+  if (resp.result === 'success') {
+    formRow.style.display = 'none';
+    note.style.display = 'none';
+    error.style.display = 'none';
+    success.style.display = 'block';
+    // Also store locally as backup
+    const waitlist = JSON.parse(localStorage.getItem('gma_waitlist') || '[]');
+    const email = document.getElementById('emailInput').value.trim();
+    if (!waitlist.includes(email)) { waitlist.push(email); localStorage.setItem('gma_waitlist', JSON.stringify(waitlist)); }
+  } else {
+    // Show error but clean up Mailchimp's HTML
+    let msg = resp.msg || 'Something went wrong. Please try again.';
+    // Remove "0 -" prefix Mailchimp adds
+    msg = msg.replace(/^0\s*-\s*/, '');
+    // If already subscribed, show success instead
+    if (msg.toLowerCase().includes('already subscribed')) {
+      formRow.style.display = 'none';
+      note.style.display = 'none';
+      error.style.display = 'none';
+      success.style.display = 'block';
+      return;
+    }
+    error.textContent = msg;
+    error.style.display = 'block';
+    formRow.style.display = 'flex';
+  }
+};
+
+function submitEmail() {
+  const input = document.getElementById('emailInput');
+  const email = input.value.trim();
+  const formRow = document.getElementById('formRow');
+  const loading = document.getElementById('formLoading');
+  const error = document.getElementById('errorMsg');
+
+  // Validate
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    error.textContent = 'Please enter a valid email address.';
+    error.style.display = 'block';
+    input.focus();
+    return;
+  }
+
+  error.style.display = 'none';
+  formRow.style.display = 'none';
+  loading.style.display = 'flex';
+
+  // JSONP request to Mailchimp
+  const script = document.createElement('script');
+  script.src = getMcUrl(email);
+  script.onerror = function() {
+    loading.style.display = 'none';
+    formRow.style.display = 'flex';
+    error.textContent = 'Network error. Please try again.';
+    error.style.display = 'block';
+  };
+  document.body.appendChild(script);
+  // Clean up script tag after use
+  setTimeout(() => { if (script.parentNode) script.parentNode.removeChild(script); }, 10000);
+}
+
+// Enter key submits
+document.getElementById('emailInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') submitEmail();
+});
+</script>
+</body>
+</html>
